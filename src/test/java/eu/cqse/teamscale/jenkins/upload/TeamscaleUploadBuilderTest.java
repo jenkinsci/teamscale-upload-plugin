@@ -25,10 +25,21 @@ public class TeamscaleUploadBuilderTest {
     @Test
     public void testConfigRoundtrip() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
-        project.getBuildersList().add(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage));
+        project.getPublishersList().add(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage));
         project = jenkins.configRoundtrip(project);
-        jenkins.assertEqualDataBoundBeans(new TeamscaleUploadBuilder(url, user, ideKey, teamscalePorject, partition, uploadMessage), project.getBuildersList().get(0));
+        jenkins.assertEqualDataBoundBeans(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage), project.getPublishersList().get(0));
     }
+
+//    @Test
+//    public void testConfigRoundtripFrench() throws Exception {
+//        FreeStyleProject project = jenkins.createFreeStyleProject();
+//        TeamscaleUploadBuilder publisher = new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage);
+//        project.getPublishersList().add(publisher);
+//        project = jenkins.configRoundtrip(project);
+//
+//        TeamscaleUploadBuilder lhs = new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, "Nope");
+//        jenkins.assertEqualDataBoundBeans(lhs, project.getPublishersList().get(0));
+//    }
 
 //    @Test
 //    public void testConfigRoundtripFrench() throws Exception {

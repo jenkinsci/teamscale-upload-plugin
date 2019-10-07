@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-    Todo
+    For uploading coverage data to teamscale.
 </div>

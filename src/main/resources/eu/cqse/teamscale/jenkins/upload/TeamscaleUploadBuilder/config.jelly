@@ -1,5 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:pbs="/lib/postbuildscript">
     <f:entry title="${%URL}" field="url">
         <f:textbox />
     </f:entry>
@@ -14,13 +14,14 @@
     </f:entry>
     <f:entry title="${%Partition}" field="partition">
         <f:textbox />
-        <f:advanced>
-        <f:entry>
-            <f:checkbox title="${%PartitionOption}" />
-            </f:entry>
-        </f:advanced>
     </f:entry>
     <f:entry title="${%UploadMessage}" field="uploadMessage">
         <f:textbox />
+    </f:entry>
+    <f:entry title="${%Files}" field="files">
+            <f:textbox />
+    </f:entry>
+    <f:entry title="${%PathToCoverageFiles}" field="pathToCoverageFiles">
+            <f:textbox />
     </f:entry>
 </j:jelly>
