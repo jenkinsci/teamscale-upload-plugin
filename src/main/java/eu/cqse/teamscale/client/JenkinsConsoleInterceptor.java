@@ -1,5 +1,6 @@
 package eu.cqse.teamscale.client;
 
+import eu.cqse.teamscale.jenkins.upload.TeamscaleUploadBuilder;
 import okhttp3.*;
 
 import javax.annotation.Nonnull;
@@ -23,25 +24,22 @@ public class JenkinsConsoleInterceptor implements Interceptor {
         Request request = chain.request();
 
         long requestStartTime = System.nanoTime();
-        stream.println(request.method());
+        stream.print(TeamscaleUploadBuilder.INFO + request.method() + " - ");
         stream.println(request.url());
-        stream.println(request.headers());
 
         Response response = getResponse(chain, request, stream);
 
         long requestEndTime = System.nanoTime();
-        stream.println(String
-                .format("<-- Received response for %s %s in %.1fms%n%s%n%n", response.code(),
-                        response.request().url(), (requestEndTime - requestStartTime) / 1e6d, response.headers()));
-        ResponseBody wrappedBody = null;
-        if (response.body() != null) {
-            MediaType contentType = response.body().contentType();
-            String content = response.body().string();
-            stream.println(content);
 
-            wrappedBody = ResponseBody.create(contentType, content);
+        double requestTimeInMs = (requestEndTime - requestStartTime) / 1e6d;
+
+        if(response.code() < 200 || response.code() > 399){
+            stream.println(TeamscaleUploadBuilder.ERROR + String.format("Response - %s in %.1fms", response.message(), requestTimeInMs));
+        }else{
+            stream.println(TeamscaleUploadBuilder.INFO + String.format("Response - %s in %.1fms", response.code(), requestTimeInMs ));
         }
-        return response.newBuilder().body(wrappedBody).build();
+
+        return response.newBuilder().body(response.body()).build();
     }
 
 
