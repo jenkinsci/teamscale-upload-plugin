@@ -15,19 +15,21 @@ public class TeamscaleUploadBuilderTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
 
-    final String url = "localhost:8100";
-    final String user = "admin";
-    final String ideKey = "WeAil7JtESNPnuopxmTCotGxmpvKqXFf";
-    final String teamscaleProject = "jenkinsplugin";
-    final String partition = "simple";
-    final String uploadMessage = "Uploaded simple coverage";
+    private final String url = "localhost:8100";
+    private final String user = "admin";
+    private final String ideKey = "WeAil7JtESNPnuopxmTCotGxmpvKqXFf";
+    private final String teamscaleProject = "jenkinsplugin";
+    private final String partition = "simple";
+    private final String uploadMessage = "Uploaded simple coverage";
+    private final String fileFormat = "**/*.simple";
+    private final String reportFormatId = "SIMPLE";
 
     @Test
     public void testConfigRoundtrip() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
-        project.getPublishersList().add(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage));
+        project.getPublishersList().add(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId));
         project = jenkins.configRoundtrip(project);
-        jenkins.assertEqualDataBoundBeans(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage), project.getPublishersList().get(0));
+        jenkins.assertEqualDataBoundBeans(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId), project.getPublishersList().get(0));
     }
 
 //    @Test
