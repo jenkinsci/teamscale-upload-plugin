@@ -1,27 +1,36 @@
 # Teamscale plugin for Jenkins
 
-Uploads external code coverage created during the build process to teamscale. 
-
+Plugin for Jenkins that provides an after build step task for 
+uploading external code coverage to teamscale. 
 
 ## Getting started
 
-To be done
+Clone [https://github.com/cqse/teamscale-jenkins-plugin.git](https://github.com/cqse/teamscale-jenkins-plugin.git).
 
 
 ## Building
 
-```bash
-To be done
+
+To build the project 
+ ```
+ mvn hpi:run
 ```
+
+To package as ```.hpi and .jar``` for manual installation in jenkins
+  ```
+  mvn package
+```
+
 
 ## Testing
 
+To run all tests either via maven 
 
 ```bash
-To be done
+mvn test
 ```
 
-[To be done](https://demo.teamscale.com). 
+or the unit tests in your IDE.
 
 ## Publishing
 
