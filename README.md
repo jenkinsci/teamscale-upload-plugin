@@ -44,5 +44,5 @@ To be done
 
 1. Create a freestyle project in Jenkins
 2. Add the Teamscale Upload plugin as post-build action
-
-![Configure the plugin] (/images/teamscale_upload_plugin_configuration.png)
+3. Configure the plugin
+![plugin configuration example] (https://github.com/cqse/teamscale-jenkins-plugin/blob/master/images/teamscale_upload_plugin_configuration.png)
