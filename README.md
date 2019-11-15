@@ -46,4 +46,3 @@ To be done
 2. Add the Teamscale Upload plugin as post-build action
 3. Configure the plugin
 <img src="/images/teamscale_upload_plugin_configuration.png" />
-![plugin configuration example] (https://github.com/cqse/teamscale-jenkins-plugin/blob/master/images/teamscale_upload_plugin_configuration.png)
