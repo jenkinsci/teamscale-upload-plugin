@@ -37,7 +37,7 @@ or the unit tests in your IDE.
  `To be done` 
 
 ```bash
-To be doneg
+To be done
 ```
 
 ##Configuring Jenkins
