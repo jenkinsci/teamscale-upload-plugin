@@ -15,6 +15,7 @@ public class DirScanner {
     }
 
     public List<File> list(File dirToScan ) throws IOException {
+        // TODO (ToP) please don't use two character variable names
         DirectoryScanner ds = new DirectoryScanner();
         String[] includes = {  this.pattern };
         //String[] excludes = {"modules\\*\\**"};
