@@ -9,14 +9,13 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.PrintStream;
 
+/**
+ * Class for forwarding HTTP-API-responses of Teamscale Uploader to the Jenkins Console.
+ */
 public class JenkinsConsoleInterceptor implements Interceptor {
 
     private PrintStream stream;
 
-    // TODO (ToP) The javadoc does not actually provide any additional information. Please remove
-    /**
-     * Constructor
-     */
     public JenkinsConsoleInterceptor(PrintStream stream) {
         this.stream = stream;
     }
@@ -30,7 +29,7 @@ public class JenkinsConsoleInterceptor implements Interceptor {
         stream.print(TeamscaleUploadBuilder.INFO + request.method() + " - ");
         stream.println(request.url());
 
-        Response response = getResponse(chain, request, stream);
+        Response response = sendRequest(chain, request, stream);
 
         long requestEndTime = System.nanoTime();
 
@@ -46,9 +45,16 @@ public class JenkinsConsoleInterceptor implements Interceptor {
     }
 
 
-    // TODO (ToP) Maybe rename to `sendRequest`. Would make clearer that we actually send something here.
-    //  `getResponse` could also mean getting the response from the Java object locally
-    private Response getResponse(Chain chain, Request request, PrintStream stream) throws IOException {
+    /**
+     * Send intercepted request and forward IO-exceptions.
+     *
+     * @param chain which is intercepted.
+     * @param request to make.
+     * @param stream to forward IO-exception to.
+     * @return response of request.
+     * @throws IOException which occurred.
+     */
+    private Response sendRequest(Chain chain, Request request, PrintStream stream) throws IOException {
         try {
             return chain.proceed(request);
         } catch (IOException e) {
