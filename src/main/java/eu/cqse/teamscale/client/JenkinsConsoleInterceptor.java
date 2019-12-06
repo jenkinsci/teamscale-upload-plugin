@@ -13,6 +13,7 @@ public class JenkinsConsoleInterceptor implements Interceptor {
 
     private PrintStream stream;
 
+    // TODO (ToP) The javadoc does not actually provide any additional information. Please remove
     /**
      * Constructor
      */
@@ -44,7 +45,10 @@ public class JenkinsConsoleInterceptor implements Interceptor {
         return response.newBuilder().body(response.body()).build();
     }
 
-    private Response getResponse(Chain chain, Request request, PrintStream stream) throws IOException{
+
+    // TODO (ToP) Maybe rename to `sendRequest`. Would make clearer that we actually send something here.
+    //  `getResponse` could also mean getting the response from the Java object locally
+    private Response getResponse(Chain chain, Request request, PrintStream stream) throws IOException {
         try {
             return chain.proceed(request);
         } catch (IOException e) {

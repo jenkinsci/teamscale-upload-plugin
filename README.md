@@ -42,10 +42,8 @@ To be done
 
 ## Configuring Jenkins
 
-1.  Create a freestyle project in Jenkins
+1. Create a freestyle project in Jenkins
+2. Add the Teamscale Upload plugin as post-build action
+3. Configure the plugin
 <img src="/doc/create_freestyle_project.gif" />
-
-2.  Add the Teamscale Upload plugin as post-build action
-
-3.  Configure the plugin
 <img src="/doc/teamscale_upload_plugin_configuration.png" />
