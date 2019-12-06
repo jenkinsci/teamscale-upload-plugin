@@ -1,7 +1,9 @@
 package eu.cqse.teamscale.client;
 
 import eu.cqse.teamscale.jenkins.upload.TeamscaleUploadBuilder;
-import okhttp3.*;
+import okhttp3.Interceptor;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -42,11 +44,10 @@ public class JenkinsConsoleInterceptor implements Interceptor {
         return response.newBuilder().body(response.body()).build();
     }
 
-
-    private Response getResponse(Chain chain, Request request, PrintStream stream) throws IOException {
+    private Response getResponse(Chain chain, Request request, PrintStream stream) throws IOException{
         try {
             return chain.proceed(request);
-        } catch (Exception e) {
+        } catch (IOException e) {
             stream.println("\n\nRequest failed!\n");
             stream.println(e);
             throw e;
