@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Utilities for Uploading files to Teamscale.
+ * Utilities for for the Teamscale Jenkins plugin.
  */
 public class TeamscaleUploadUtilities {
 

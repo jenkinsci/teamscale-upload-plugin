@@ -7,7 +7,9 @@ import eu.cqse.teamscale.client.JenkinsConsoleInterceptor;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.FilePath;
-import hudson.model.*;
+import hudson.model.AbstractProject;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
@@ -22,13 +24,20 @@ import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.List;
 
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import retrofit2.Call;
 
+/**
+ * The Teamscale Jenkins plugin.
+ * The inheritance from Notifier marks is as a post build action plugin.
+ */
 public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep {
 
     /**
@@ -236,15 +245,17 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         public FormValidation doCheckUrl(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0)
+            if (value.length() == 0){
                 return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
+            }
             return FormValidation.ok();
         }
 
         public FormValidation doCheckUserName(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0)
+            if (value.length() == 0){
                 return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
+            }
             return FormValidation.ok();
         }
 
@@ -257,22 +268,25 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         public FormValidation doCheckTeamscaleProject(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0)
+            if (value.length() == 0){
                 return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
+            }
             return FormValidation.ok();
         }
 
         public FormValidation doCheckPartition(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0)
+            if (value.length() == 0){
                 return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
+            }
             return FormValidation.ok();
         }
 
         public FormValidation doCheckUploadMessage(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0)
+            if (value.length() == 0){
                 return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
+            }
             return FormValidation.ok();
         }
 
@@ -285,8 +299,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         public FormValidation doCheckReportFormatId(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0)
+            if (value.length() == 0){
                 return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
+            }
             return FormValidation.ok();
         }
 
