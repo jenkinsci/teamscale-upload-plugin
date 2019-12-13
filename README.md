@@ -3,12 +3,14 @@
 Plugin for Jenkins that provides an after build step task for 
 uploading external code coverage to teamscale. 
 
-## Getting started
+## For Developers
+
+### Getting started
 
 Clone [https://github.com/cqse/teamscale-jenkins-plugin.git](https://github.com/cqse/teamscale-jenkins-plugin.git).
 
 
-## Building
+### Building
 
 
 To build the project 
@@ -22,7 +24,7 @@ To package as ```.hpi and .jar``` for manual installation in jenkins
 ```
 
 
-## Testing
+### Testing
 
 To run all tests either via maven 
 
@@ -32,7 +34,7 @@ mvn test
 
 or the unit tests in your IDE.
 
-## Publishing
+### Publishing
 
  `To be done` 
 
@@ -40,10 +42,8 @@ or the unit tests in your IDE.
 To be done
 ```
 
-## Configuring Jenkins
 
-1. Create a freestyle project in Jenkins
-2. Add the Teamscale Upload plugin as post-build action
-3. Configure the plugin
-<img src="/doc/create_freestyle_project.gif" />
-<img src="/doc/teamscale_upload_plugin_configuration.png" />
+
+## For Administrators
+
+For further configuration or help see the [wiki](https://github.com/cqse/teamscale-jenkins-plugin/wiki)

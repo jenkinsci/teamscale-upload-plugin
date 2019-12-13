@@ -245,61 +245,46 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         public FormValidation doCheckUrl(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0){
-                return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
-            }
-            return FormValidation.ok();
+            return getFormValidation(value);
         }
 
         public FormValidation doCheckUserName(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0){
-                return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
-            }
-            return FormValidation.ok();
+            return getFormValidation(value);
         }
 
         public FormValidation doCheckIdeKey(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0)
-                return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
-            return FormValidation.ok();
+            return getFormValidation(value);
         }
 
         public FormValidation doCheckTeamscaleProject(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0){
-                return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
-            }
-            return FormValidation.ok();
+            return getFormValidation(value);
         }
 
         public FormValidation doCheckPartition(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0){
-                return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
-            }
-            return FormValidation.ok();
+            return getFormValidation(value);
         }
 
         public FormValidation doCheckUploadMessage(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0){
-                return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
-            }
-            return FormValidation.ok();
+            return getFormValidation(value);
         }
 
         public FormValidation doCheckAntPatternForFileScan(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0)
-                return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
-            return FormValidation.ok();
+            return getFormValidation(value);
         }
 
         public FormValidation doCheckReportFormatId(@QueryParameter String value)
                 throws IOException, ServletException {
-            if (value.length() == 0){
+            return getFormValidation(value);
+        }
+
+        private FormValidation getFormValidation(@QueryParameter String value) {
+            if (value.length() == 0) {
                 return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
             }
             return FormValidation.ok();
