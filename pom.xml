@@ -15,18 +15,13 @@
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
         <jenkins.version>2.164.1</jenkins.version>
         <java.level>8</java.level>
-        <!-- Other properties you may want to use:
-          ~ jenkins-test-harness.version: Jenkins Test Harness version you use to test the plugin. For Jenkins version >= 1.580.1 use JTH 2.0 or higher.
-          ~ hpi-plugin.version: The HPI Maven Plugin version used by the plugin..
-          ~ stapler-plugin.version: The Stapler Maven plugin version required by the plugin.
-     -->
+
     </properties>
-    <name>TODO Plugin</name>
-    <!-- The default licence for Jenkins OSS Plugins is MIT. Substitute for the applicable one if needed. -->
+    <name>teamscale-upload</name>
     <licenses>
         <license>
-            <name>MIT License</name>
-            <url>https://opensource.org/licenses/MIT</url>
+            <name>Apache 2.0 License</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
     </licenses>
 
@@ -140,9 +135,14 @@
     <!-- If you want this to appear on the wiki page:
     <developers>
       <developer>
-        <id>bhacker</id>
-        <name>Bob Q. Hacker</name>
-        <email>bhacker@nowhere.net</email>
+        <id>24626073</id>
+        <name>Jeremias Wiedmann</name>
+        <email>wiedmann@cqse.eu</email>
+      </developer>
+      <developer>
+        <id>5918583</id>
+        <name>Thomas Pettinger</name>
+        <email>pettinger@cqse.eu</email>
       </developer>
     </developers> -->
 

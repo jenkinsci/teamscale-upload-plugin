@@ -8,3 +8,4 @@ target
 *.ipr
 *.iws
 work
+teamscale_plugin_mappings.properties

@@ -45,8 +45,13 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      */
     private ITeamscaleService api;
 
+    /** For printing errors to jenkins console. */
     public static final String ERROR = "TS-ERROR: ";
+
+    /** For printing warnings to jenkins console. */
     public static final String WARNING = "TS-WARNING: ";
+
+    /** For printing info to jenkins console. */
     public static final String INFO = "TS-INFO: ";
 
     private static final String EXEC_FOLDER = "exec";
@@ -60,6 +65,17 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private String antPatternForFileScan;
     private String reportFormatId;
 
+    /**
+     * Automatic data binding on save of the plugin configuration in jenkins.
+     * @param url to save.
+     * @param userName to save.
+     * @param ideKey to save.
+     * @param teamscaleProject to save.
+     * @param partition to save.
+     * @param uploadMessage to save.
+     * @param antPatternForFileScan to save.
+     * @param reportFormatId to save.
+     */
     @DataBoundConstructor
     public TeamscaleUploadBuilder(String url, String userName, String ideKey, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId) {
         this.url = url;
@@ -239,6 +255,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     }
 
 
+    /**
+     * Description/Hint provided if user does not fill out the plugin fields correctly.
+     */
     @Symbol("greet")
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
@@ -283,6 +302,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return getFormValidation(value);
         }
 
+        /**
+         * Checks the value of an input field of the plugin.
+         * @param value to check.
+         * @return ok or not okay.
+         */
         private FormValidation getFormValidation(@QueryParameter String value) {
             if (value.length() == 0) {
                 return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
