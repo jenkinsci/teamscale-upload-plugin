@@ -14,6 +14,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.tasks.BuildStepDescriptor;
+import hudson.util.Secret;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -58,7 +59,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     private String url;
     private String userName;
-    private String ideKey;
+    private Secret ideKey;
     private String teamscaleProject;
     private String partition;
     private String uploadMessage;
@@ -77,7 +78,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param reportFormatId to save.
      */
     @DataBoundConstructor
-    public TeamscaleUploadBuilder(String url, String userName, String ideKey, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId) {
+    public TeamscaleUploadBuilder(String url, String userName, Secret ideKey, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId) {
         this.url = url;
         this.userName = userName;
         this.ideKey = ideKey;
@@ -96,7 +97,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return userName;
     }
 
-    public String getIdeKey() {
+    public Secret getIdeKey() {
         return ideKey;
     }
 
@@ -131,7 +132,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 ITeamscaleService.class,
                 HttpUrl.parse(getUrl()),
                 getUserName(),
-                getIdeKey(),
+                getIdeKey().getPlainText(),
                 new JenkinsConsoleInterceptor(listener.getLogger())
         );
 
