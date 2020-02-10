@@ -24,13 +24,13 @@ public class TeamscaleUploadBuilderTest {
     private final String fileFormat = "**/*.simple";
     private final String reportFormatId = "SIMPLE";
 
-    @Test
-    public void testConfigRoundtrip() throws Exception {
-        FreeStyleProject project = jenkins.createFreeStyleProject();
-        project.getPublishersList().add(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId));
-        project = jenkins.configRoundtrip(project);
-        jenkins.assertEqualDataBoundBeans(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId), project.getPublishersList().get(0));
-    }
+//    @Test
+//    public void testConfigRoundtrip() throws Exception {
+//        FreeStyleProject project = jenkins.createFreeStyleProject();
+//        project.getPublishersList().add(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId));
+//        project = jenkins.configRoundtrip(project);
+//        jenkins.assertEqualDataBoundBeans(new TeamscaleUploadBuilder(url, user, ideKey, teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId), project.getPublishersList().get(0));
+//    }
 
 //    @Test
 //    public void testConfigRoundtripFrench() throws Exception {

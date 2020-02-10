@@ -205,7 +205,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      */
     @Nonnull
     private String getBranchAndTimeStamp(FilePath workspace, String timestampExecutableName) throws IOException, InterruptedException {
-        Process process = Runtime.getRuntime().exec(workspace.toURI().getPath() + File.separator + timestampExecutableName);
+        Process process = Runtime.getRuntime().exec(workspace.toURI().getPath() + File.separator + timestampExecutableName, null, new File(workspace.toURI()));
 
         InputStream inputStream = process.getInputStream();
         StringBuilder build = new StringBuilder();
