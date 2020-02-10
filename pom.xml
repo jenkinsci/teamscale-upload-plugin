@@ -132,7 +132,6 @@
 
     </dependencyManagement>
 
-    <!-- If you want this to appear on the wiki page:
     <developers>
       <developer>
         <id>24626073</id>
@@ -144,16 +143,15 @@
         <name>Thomas Pettinger</name>
         <email>pettinger@cqse.eu</email>
       </developer>
-    </developers> -->
+    </developers>
 
-    <!-- Assuming you want to host on @jenkinsci:
-    <url>https://wiki.jenkins.io/display/JENKINS/TODO+Plugin</url>
+    <url>https://wiki.jenkins.io/display/JENKINS/TeamscalePlugin</url>
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     </scm>
-    -->
+
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
