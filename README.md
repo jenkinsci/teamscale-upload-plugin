@@ -10,11 +10,11 @@ uploading external code coverage to teamscale.
 ## Getting started
 1. Install the plugin on your jenkins server
 2. Create a freestyle project in Jenkins
-![](https://github.com/cqse/teamscale-jenkins-plugin/blob/master/doc/create_freestyle_project.gif)
+![](https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/create_freestyle_project.gif)
 3. Add the Teamscale Upload plugin as post-build action
 4. Configure the plugin
 
-![](https://github.com/cqse/teamscale-jenkins-plugin/blob/master/doc/teamscale_upload_plugin_configuration.png)
+![](https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/teamscale_upload_plugin_configuration.png)
 
 
 ## For Developers
