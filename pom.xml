@@ -10,10 +10,11 @@
     <groupId>io.jenkins.plugins</groupId>
     <artifactId>teamscale-upload</artifactId>
     <version>1.2-SNAPSHOT</version>
+
+
     <name>teamscale-upload</name>
     <description>Plugin for Jenkins that provides an after build step task for uploading external code coverage to teamscale</description>
-
-    <url>https://wiki.jenkins.io/display/JENKINS/Teamscale+Upload+Plugin</url>
+    <url>https://github.com/jenkinsci/Teamscale+Upload+Plugin</url>
 
     <packaging>hpi</packaging>
     <properties>
@@ -152,7 +153,7 @@
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-      <tag>teamscale-upload-1.0</tag>
+      <tag>${scmTag}</tag>
   </scm>
 
     <repositories>
