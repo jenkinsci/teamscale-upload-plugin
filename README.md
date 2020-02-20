@@ -11,8 +11,10 @@ uploading external code coverage to teamscale.
 1. Install the plugin on your jenkins server
 2. Create a freestyle project in Jenkins
 ![](https://github.com/cqse/teamscale-jenkins-plugin/blob/master/doc/create_freestyle_project.gif)
-3. Add the Teamscale Upload plugin as post-build action
-4. Configure the plugin
+3. Also specifically checkout the branch which is cloned from jenkins that the plugin works correctly.
+![](https://github.com/cqse/teamscale-jenkins-plugin/blob/master/doc/checkout_local_branch.gif)
+4. Add the Teamscale Upload plugin as post-build action
+5. Configure the plugin
 
 ![](https://github.com/cqse/teamscale-jenkins-plugin/blob/master/doc/teamscale_upload_plugin_configuration.png)
 
@@ -49,8 +51,13 @@ or the unit tests in your IDE.
 ### Publishing
 
 File a [PR](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request) on master
+Ask a repository maintainer to approve the PR or become a maintainer yourself 
 
+Consider reading [this](https://jenkins.io/doc/developer/plugin-governance/managing-permissions/) to become a maintainer.
+
+As Maintainer:
+Consider reading [Releasing  jenkins plugin](https://jenkins.io/doc/developer/publishing/releasing/)
 ```bash
-To be done
+mvn release:prepare release:perform
 ```
 
