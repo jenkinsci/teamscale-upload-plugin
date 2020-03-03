@@ -14,7 +14,7 @@
 
     <name>teamscale-upload</name>
     <description>Plugin for Jenkins that provides an after build step task for uploading external code coverage to teamscale</description>
-    <url>https://github.com/jenkinsci/Teamscale+Upload+Plugin</url>
+    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
 
     <packaging>hpi</packaging>
     <properties>
