@@ -16,8 +16,25 @@ uploading external code coverage to teamscale.
 4. Add the Teamscale Upload plugin as post-build action
 5. Configure the plugin
 
-The URL can be either a normal URL or an ip-address.
-![](https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/teamscale_upload_plugin_configuration.png)
+<p align="center">
+  <img src="https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/teamscale_upload_plugin_configuration.png">
+</p>
+  
+* <b>URL</b>: http://www.yoururl.com:port or http://ip-adress:port
+* <b>Username</b>: user in Teamscale instance
+* <b>IDE Key</b>: generated IDE key for the user
+* <b>Project</b>: project in Teamscale
+* <b>Partition</b>: The partition of the project to push code coverage to
+* <b>Upload Message</b>: Any message for the uploaded data
+* <b>File Format</b>: Ant-pattern style to look for files (here: looking in all directories for .simple files)
+* <b>Report Format ID</b>: Matching ID in teamscale, ask your teamscale consultant (may be automatic mapped in the future)
+
+
+
+  
+
+
+
 
 
 ## For Developers
