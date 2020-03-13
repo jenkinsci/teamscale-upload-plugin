@@ -16,6 +16,7 @@ uploading external code coverage to teamscale.
 4. Add the Teamscale Upload plugin as post-build action
 5. Configure the plugin
 
+The URL can be either a normal URL or an ip-address.
 ![](https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/teamscale_upload_plugin_configuration.png)
 
 
