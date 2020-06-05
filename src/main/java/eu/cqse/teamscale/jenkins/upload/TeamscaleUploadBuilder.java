@@ -46,13 +46,19 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      */
     private ITeamscaleService api;
 
-    /** For printing errors to jenkins console. */
+    /**
+     * For printing errors to jenkins console.
+     */
     public static final String ERROR = "TS-ERROR: ";
 
-    /** For printing warnings to jenkins console. */
+    /**
+     * For printing warnings to jenkins console.
+     */
     public static final String WARNING = "TS-WARNING: ";
 
-    /** For printing info to jenkins console. */
+    /**
+     * For printing info to jenkins console.
+     */
     public static final String INFO = "TS-INFO: ";
 
     private static final String EXEC_FOLDER = "exec";
@@ -68,14 +74,15 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     /**
      * Automatic data binding on save of the plugin configuration in jenkins.
-     * @param url to save.
-     * @param userName to save.
-     * @param ideKey to save.
-     * @param teamscaleProject to save.
-     * @param partition to save.
-     * @param uploadMessage to save.
+     *
+     * @param url                   to save.
+     * @param userName              to save.
+     * @param ideKey                to save.
+     * @param teamscaleProject      to save.
+     * @param partition             to save.
+     * @param uploadMessage         to save.
      * @param antPatternForFileScan to save.
-     * @param reportFormatId to save.
+     * @param reportFormatId        to save.
      */
     @DataBoundConstructor
     public TeamscaleUploadBuilder(String url, String userName, Secret ideKey, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId) {
@@ -142,10 +149,10 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Upload test results specified by ant-pattern to the teamscale server.
      *
-     * @param workspace of jenkins project.
-     * @param printStream writing logging output to.
+     * @param workspace                   of jenkins project.
+     * @param printStream                 writing logging output to.
      * @param timestampToolExecutableName name of the timestamp executable.
-     * @throws IOException access on timestamp tool not successful.
+     * @throws IOException          access on timestamp tool not successful.
      * @throws InterruptedException executable thread of timestamp tool was interrupted.
      */
     private void uploadFilesToTeamscale(FilePath workspace, @Nonnull PrintStream printStream, String timestampToolExecutableName) throws IOException, InterruptedException {
@@ -162,7 +169,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             printStream.println(INFO + "Timestamp: " + timeStamp);
             for (File file : files) {
                 File currentFile = new File(workspace.toURI().getPath() + File.separator + file.toString());
-                String fileContentAsString  =  FileUtils.readFileToString(currentFile, "UTF-8");
+                String fileContentAsString = FileUtils.readFileToString(currentFile, "UTF-8");
                 uploadReport(fileContentAsString, branchName, timeStamp);
             }
         }
@@ -171,10 +178,10 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Copy timestamp tool for version control system to the workspace of the project.
      *
-     * @param workspace of jenkins project.
-     * @param printStream writing logging output to.
+     * @param workspace                   of jenkins project.
+     * @param printStream                 writing logging output to.
      * @param timestampToolExecutableName name of the timestamp executable.
-     * @throws IOException access on timestamp tool not successful.
+     * @throws IOException          access on timestamp tool not successful.
      * @throws InterruptedException executable thread of timestamp tool was interrupted.
      */
     private void copyToolToWorkspace(FilePath workspace, @Nonnull PrintStream printStream, String timestampToolExecutableName) throws IOException, InterruptedException {
@@ -197,10 +204,10 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Retrieve branch and timestamp of version control system belonging to the workspace and the project.
      *
-     * @param workspace of jenkins project.
+     * @param workspace               of jenkins project.
      * @param timestampExecutableName name of the timestamp executable.
      * @return branch and timestamp ':' separated
-     * @throws IOException access on timestamp tool not successful.
+     * @throws IOException          access on timestamp tool not successful.
      * @throws InterruptedException executable thread of timestamp tool was interrupted.
      */
     @Nonnull
@@ -245,9 +252,10 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     /**
      * Determine which timestamp tool to use for MAC, Linux or Windows.
+     *
      * @return timestamp-tool name.
      */
-    private String getPlatformSpecificTimestampToolName(){
+    private String getPlatformSpecificTimestampToolName() {
         String timestampToolExecutableName = "teamscale-timestamp";
         if (System.getProperty("os.name").toLowerCase().contains("windows")) {
             timestampToolExecutableName += ".exe";
@@ -305,6 +313,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         /**
          * Checks the value of an input field of the plugin.
+         *
          * @param value to check.
          * @return ok or not okay.
          */
