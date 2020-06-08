@@ -1,5 +1,12 @@
 package eu.cqse.teamscale.jenkins.upload;
 
+import com.cloudbees.plugins.credentials.CredentialsMatcher;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.teamscale.client.CommitDescriptor;
 import com.teamscale.client.ITeamscaleService;
 import com.teamscale.client.TeamscaleServiceGenerator;
@@ -8,18 +15,26 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.FilePath;
 import hudson.model.AbstractProject;
+import hudson.model.Item;
+import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.model.queue.Tasks;
+import hudson.security.ACL;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.tasks.BuildStepDescriptor;
+import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import jenkins.model.Jenkins;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -30,16 +45,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.Objects;
 
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import retrofit2.Call;
+
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 
 /**
  * The Teamscale Jenkins plugin.
  * The inheritance from Notifier marks is as a post build action plugin.
  */
 public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep {
+
+    /**
+     * Matcher for populating the credentials dropdown
+     */
+    private static final CredentialsMatcher MATCHER = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
 
     /**
      * Api for uploading files to Teamscale.
@@ -72,6 +95,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private String antPatternForFileScan;
     private String reportFormatId;
 
+
+    private String credentialsId;
+
     /**
      * Automatic data binding on save of the plugin configuration in jenkins.
      *
@@ -85,7 +111,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param reportFormatId        to save.
      */
     @DataBoundConstructor
-    public TeamscaleUploadBuilder(String url, String userName, Secret ideKey, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId) {
+    public TeamscaleUploadBuilder(String url, String userName, Secret ideKey, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId, String credentialsId) {
         this.url = url;
         this.userName = userName;
         this.ideKey = ideKey;
@@ -94,6 +120,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         this.uploadMessage = uploadMessage;
         this.antPatternForFileScan = antPatternForFileScan;
         this.reportFormatId = reportFormatId;
+        this.credentialsId = credentialsId;
     }
 
     public String getUrl() {
@@ -128,18 +155,36 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return reportFormatId;
     }
 
+    public String getCredentialsId() {
+        return credentialsId;
+    }
+
+    public void setCredentialsId(String credentialsId) {
+        this.credentialsId = credentialsId;
+    }
+
     @Override
     public void perform(@Nonnull Run<?, ?> run, FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
 
         String timestampToolExecutableName = getPlatformSpecificTimestampToolName();
 
+        StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
+                credentialsId,
+                StandardUsernamePasswordCredentials.class,
+                run,
+                URIRequirementBuilder.fromUri(getUrl()).build());
+
+        if(credential == null){
+            return;
+        }
+
         copyToolToWorkspace(workspace, listener.getLogger(), timestampToolExecutableName);
 
         api = TeamscaleServiceGenerator.createService(
                 ITeamscaleService.class,
-                HttpUrl.parse(getUrl()),
-                getUserName(),
-                getIdeKey().getPlainText(),
+                Objects.requireNonNull(HttpUrl.parse(getUrl())),
+                credential.getUsername(),
+                credential.getPassword().getPlainText(),
                 new JenkinsConsoleInterceptor(listener.getLogger())
         );
 
@@ -309,6 +354,76 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         public FormValidation doCheckReportFormatId(@QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
+        }
+
+        /**
+         * Populates the dropdown for the credentials matching {@literal MATCHER}
+         *
+         * @param project       to look in.
+         * @param url           jenkins server url
+         * @param credentialsId current populated id
+         * @return list of credentials
+         */
+        public ListBoxModel doFillCredentialsIdItems(
+                @AncestorInPath Item project,
+                @QueryParameter String url,
+                @QueryParameter String credentialsId
+        ) {
+            StandardListBoxModel result = new StandardListBoxModel();
+            if (project == null) {
+                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                    return result.includeCurrentValue(credentialsId); // (2)
+                }
+            } else {
+                if (!project.hasPermission(Item.EXTENDED_READ)
+                        && !project.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return result.includeCurrentValue(credentialsId); // (2)
+                }
+            }
+
+            return result
+                    .includeMatchingAs(
+                            project instanceof Queue.Task ?
+                                    Tasks.getAuthenticationOf((Queue.Task) project) : ACL.SYSTEM,
+                            project,
+                            StandardUsernamePasswordCredentials.class,
+                            URIRequirementBuilder.fromUri(url).build(),
+                            MATCHER)
+                    .includeCurrentValue(credentialsId);
+        }
+
+        public FormValidation doCheckCredentialsId(
+                @AncestorInPath Item item,
+                @QueryParameter String url,
+                @QueryParameter String value
+        ) {
+            if (item == null) {
+                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                    return FormValidation.ok();
+                }
+            } else {
+                if (!item.hasPermission(Item.EXTENDED_READ)
+                        && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return FormValidation.ok();
+                }
+            }
+            if (value.startsWith("${") && value.endsWith("}")) {
+                return FormValidation.warning("Cannot validate expression based credentials");
+            }
+            if (StringUtils.isBlank(value)) {
+                return FormValidation.error("Upload will fail without credentials");
+            }
+            if (CredentialsProvider.listCredentials(
+                    StandardUsernameCredentials.class,
+                    item,
+                    item instanceof Queue.Task ?
+                            Tasks.getAuthenticationOf((Queue.Task) item) : ACL.SYSTEM,
+                    URIRequirementBuilder.fromUri(url).build(),
+                    CredentialsMatchers.withId(value)
+            ).isEmpty()) {
+                return FormValidation.error("Cannot find currently selected credentials");
+            }
+            return FormValidation.ok();
         }
 
         /**
