@@ -3,11 +3,8 @@
     <f:entry title="${%URL}" field="url">
         <f:textbox />
     </f:entry>
-    <f:entry title="${%Username}" field="userName">
-        <f:textbox />
-    </f:entry>
-    <f:entry title="${%IDEKey}" field="ideKey">
-        <f:password />
+    <f:entry field="credentialsId" title="${%Credentials}">
+        <c:select/>
     </f:entry>
     <f:entry title="${%TeamscaleProject}" field="teamscaleProject">
         <f:textbox />
@@ -24,7 +21,5 @@
     <f:entry title="${%ReportFormatID}" field="reportFormatId">
             <f:textbox />
     </f:entry>
-    <f:entry field="credentialsId" title="${%Credentials}">
-        <c:select/>
-    </f:entry>
+
 </j:jelly>
