@@ -105,6 +105,7 @@
         </dependency>
 
         <!-- Teamscale Client -->
+        <!-- Upgrade to 0.3.4 -->
         <dependency>
             <groupId>com.teamscale</groupId>
             <artifactId>teamscale-client</artifactId>

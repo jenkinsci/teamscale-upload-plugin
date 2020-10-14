@@ -26,7 +26,6 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
@@ -45,13 +44,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
-import java.util.Objects;
 
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import retrofit2.Call;
-
-import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 
 /**
  * The Teamscale Jenkins plugin.
@@ -86,14 +82,12 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     private static final String EXEC_FOLDER = "exec";
 
-    private String url;
-    private String userName;
-    private Secret ideKey;
-    private String teamscaleProject;
-    private String partition;
-    private String uploadMessage;
-    private String antPatternForFileScan;
-    private String reportFormatId;
+    private final String url;
+    private final String teamscaleProject;
+    private final String partition;
+    private final String uploadMessage;
+    private final String antPatternForFileScan;
+    private final String reportFormatId;
 
 
     private String credentialsId;
@@ -102,8 +96,6 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * Automatic data binding on save of the plugin configuration in jenkins.
      *
      * @param url                   to save.
-     * @param userName              to save.
-     * @param ideKey                to save.
      * @param teamscaleProject      to save.
      * @param partition             to save.
      * @param uploadMessage         to save.
@@ -111,10 +103,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param reportFormatId        to save.
      */
     @DataBoundConstructor
-    public TeamscaleUploadBuilder(String url, String userName, Secret ideKey, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId, String credentialsId) {
+    public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId) {
         this.url = url;
-        this.userName = userName;
-        this.ideKey = ideKey;
         this.teamscaleProject = teamscaleProject;
         this.partition = partition;
         this.uploadMessage = uploadMessage;
@@ -125,14 +115,6 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     public String getUrl() {
         return url;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public Secret getIdeKey() {
-        return ideKey;
     }
 
     public String getTeamscaleProject() {
@@ -175,14 +157,23 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 URIRequirementBuilder.fromUri(getUrl()).build());
 
         if(credential == null){
+            listener.getLogger().println(ERROR + "credentials are null");
             return;
         }
 
         copyToolToWorkspace(workspace, listener.getLogger(), timestampToolExecutableName);
 
+        HttpUrl url = HttpUrl.parse(getUrl());
+        if(url == null){
+            return;
+        }
+        listener.getLogger().println("1 : " + workspace.toURI().getPath() + timestampToolExecutableName);
+        listener.getLogger().println("2 : " + workspace.toURI().getPath() + File.separator + timestampToolExecutableName);
+        listener.getLogger().println("3 : " + workspace.toURI().getPath() + timestampToolExecutableName.substring(1, timestampToolExecutableName.length()));
+
         api = TeamscaleServiceGenerator.createService(
                 ITeamscaleService.class,
-                Objects.requireNonNull(HttpUrl.parse(getUrl())),
+                url,
                 credential.getUsername(),
                 credential.getPassword().getPlainText(),
                 new JenkinsConsoleInterceptor(listener.getLogger())
@@ -235,7 +226,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         if (!destination.exists()) {
             try {
-                InputStream sourceStream = this.getClass().getClassLoader().getResourceAsStream(EXEC_FOLDER + "/" + timestampToolExecutableName);
+                InputStream sourceStream = this.getClass().getClassLoader().getResourceAsStream(EXEC_FOLDER + File.separator + timestampToolExecutableName);
                 FileUtils.copyInputStreamToFile(sourceStream, destination);
                 printStream.println(INFO + "Copied timestamp");
             } catch (IOException e) {
@@ -257,6 +248,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      */
     @Nonnull
     private String getBranchAndTimeStamp(FilePath workspace, String timestampExecutableName) throws IOException, InterruptedException {
+
         Process process = Runtime.getRuntime().exec(workspace.toURI().getPath() + File.separator + timestampExecutableName, null, new File(workspace.toURI()));
 
         InputStream inputStream = process.getInputStream();
@@ -312,21 +304,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Description/Hint provided if user does not fill out the plugin fields correctly.
      */
-    @Symbol("greet")
+    @Symbol("teamscale")
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         public FormValidation doCheckUrl(@QueryParameter String value)
-                throws IOException, ServletException {
-            return getFormValidation(value);
-        }
-
-        public FormValidation doCheckUserName(@QueryParameter String value)
-                throws IOException, ServletException {
-            return getFormValidation(value);
-        }
-
-        public FormValidation doCheckIdeKey(@QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
         }
@@ -372,12 +354,12 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             StandardListBoxModel result = new StandardListBoxModel();
             if (project == null) {
                 if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
-                    return result.includeCurrentValue(credentialsId); // (2)
+                    return result.includeCurrentValue(credentialsId);
                 }
             } else {
                 if (!project.hasPermission(Item.EXTENDED_READ)
                         && !project.hasPermission(CredentialsProvider.USE_ITEM)) {
-                    return result.includeCurrentValue(credentialsId); // (2)
+                    return result.includeCurrentValue(credentialsId);
                 }
             }
 
