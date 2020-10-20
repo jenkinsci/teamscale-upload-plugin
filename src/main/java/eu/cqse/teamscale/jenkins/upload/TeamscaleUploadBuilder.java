@@ -11,6 +11,7 @@ import com.teamscale.client.CommitDescriptor;
 import com.teamscale.client.ITeamscaleService;
 import com.teamscale.client.TeamscaleServiceGenerator;
 import eu.cqse.teamscale.client.JenkinsConsoleInterceptor;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.FilePath;
@@ -44,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.Map;
 
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
@@ -148,6 +150,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     @Override
     public void perform(@Nonnull Run<?, ?> run, FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
 
+
         String timestampToolExecutableName = getPlatformSpecificTimestampToolName();
 
         StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
@@ -156,7 +159,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 run,
                 URIRequirementBuilder.fromUri(getUrl()).build());
 
-        if(credential == null){
+        if (credential == null) {
             listener.getLogger().println(ERROR + "credentials are null");
             return;
         }
@@ -164,12 +167,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         copyToolToWorkspace(workspace, listener.getLogger(), timestampToolExecutableName);
 
         HttpUrl url = HttpUrl.parse(getUrl());
-        if(url == null){
+        if (url == null) {
             return;
         }
-        listener.getLogger().println("1 : " + workspace.toURI().getPath() + timestampToolExecutableName);
-        listener.getLogger().println("2 : " + workspace.toURI().getPath() + File.separator + timestampToolExecutableName);
-        listener.getLogger().println("3 : " + workspace.toURI().getPath() + timestampToolExecutableName.substring(1, timestampToolExecutableName.length()));
 
         api = TeamscaleServiceGenerator.createService(
                 ITeamscaleService.class,
@@ -179,36 +179,48 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 new JenkinsConsoleInterceptor(listener.getLogger())
         );
 
-        uploadFilesToTeamscale(workspace, listener.getLogger(), timestampToolExecutableName);
+        String revision = getScmRevision(run.getEnvironment(listener));
+        if (revision == null) {
+            listener.getLogger().println(ERROR + "Could not find any revision. Currently only GIT and SVN are supported.");
+            return;
+        }
+
+        List<File> files = getFilesToUpload(workspace);
+
+        if(files.isEmpty()) {
+            listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getAntPatternForFileScan() + "\"");
+            return;
+        }
+        uploadFilesToTeamscale(files, revision);
+    }
+
+    private List<File> getFilesToUpload(FilePath workspace) throws IOException, InterruptedException{
+        List<File> files = TeamscaleUploadUtilities.getFiles(new File(workspace.toURI().getPath()), getAntPatternForFileScan());
+        for (File file : files) {
+            File currentFile = new File(workspace.toURI().getPath() + File.separator + file.toString()); // replace with file.getName()
+        }
+        return files;
     }
 
     /**
      * Upload test results specified by ant-pattern to the teamscale server.
      *
-     * @param workspace                   of jenkins project.
-     * @param printStream                 writing logging output to.
-     * @param timestampToolExecutableName name of the timestamp executable.
      * @throws IOException          access on timestamp tool not successful.
      * @throws InterruptedException executable thread of timestamp tool was interrupted.
      */
-    private void uploadFilesToTeamscale(FilePath workspace, @Nonnull PrintStream printStream, String timestampToolExecutableName) throws IOException, InterruptedException {
-        List<File> files = TeamscaleUploadUtilities.getFiles(new File(workspace.toURI().getPath()), getAntPatternForFileScan());
-
-        if (files.isEmpty()) {
-            printStream.println(ERROR + "No files found with pattern " + getAntPatternForFileScan());
-        } else {
-            String branchAndTimeStamp = getBranchAndTimeStamp(workspace, timestampToolExecutableName);
-            String branchName = branchAndTimeStamp.substring(0, branchAndTimeStamp.indexOf(':'));
-            String timeStamp = branchAndTimeStamp.substring(branchAndTimeStamp.indexOf(':') + 1);
-
-            printStream.println(INFO + "Branch: " + branchName);
-            printStream.println(INFO + "Timestamp: " + timeStamp);
+    private void uploadFilesToTeamscale(List<File> files, String revision) throws IOException, InterruptedException {
             for (File file : files) {
-                File currentFile = new File(workspace.toURI().getPath() + File.separator + file.toString());
-                String fileContentAsString = FileUtils.readFileToString(currentFile, "UTF-8");
-                uploadReport(fileContentAsString, branchName, timeStamp);
+                String fileContentAsString = FileUtils.readFileToString(new File(file.getPath()), "UTF-8");
+                uploadReport(fileContentAsString, revision);
             }
+    }
+
+    private String getScmRevision(EnvVars envVars) {
+        String gitCommit = envVars.get("GIT_COMMIT");
+        if (gitCommit != null) {
+            return gitCommit;
         }
+        return envVars.get("SVN_REVISION");
     }
 
     /**
@@ -221,7 +233,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @throws InterruptedException executable thread of timestamp tool was interrupted.
      */
     private void copyToolToWorkspace(FilePath workspace, @Nonnull PrintStream printStream, String timestampToolExecutableName) throws IOException, InterruptedException {
-        File destination = new File(workspace.toURI().getPath() + File.separator + timestampToolExecutableName);
+        File destination = new File(workspace.toURI().getPath() /*+ File.separator*/ + timestampToolExecutableName);
         destination.setExecutable(true);
 
         if (!destination.exists()) {
@@ -249,7 +261,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     @Nonnull
     private String getBranchAndTimeStamp(FilePath workspace, String timestampExecutableName) throws IOException, InterruptedException {
 
-        Process process = Runtime.getRuntime().exec(workspace.toURI().getPath() + File.separator + timestampExecutableName, null, new File(workspace.toURI()));
+        Process process = Runtime.getRuntime().exec(workspace.toURI().getPath() /*+ File.separator*/ + timestampExecutableName, null, new File(workspace.toURI()));
 
         InputStream inputStream = process.getInputStream();
         StringBuilder build = new StringBuilder();
@@ -264,17 +276,16 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Performs an upload of an external report.
      *
-     * @param data       to upload.
-     * @param branchName for external upload.
-     * @param timestamp  for external upload.
+     * @param data     to upload.
+     * @param revision coverage is applied to.
      */
-    private void uploadReport(String data, String branchName, String timestamp) {
+    private void uploadReport(String data, String revision) {
         Call<ResponseBody> apiRequest = api.uploadExternalReport(
                 getTeamscaleProject(),
                 getReportFormatId(),
-                new CommitDescriptor(branchName, timestamp),
+                null,
+                revision,
                 true,
-                false,
                 getPartition(),
                 getUploadMessage(),
                 RequestBody.create(data, MultipartBody.FORM)

@@ -109,7 +109,7 @@
         <dependency>
             <groupId>com.teamscale</groupId>
             <artifactId>teamscale-client</artifactId>
-            <version>0.3.0</version>
+            <version>20.0.0</version>
         </dependency>
 
         <dependency>
@@ -167,10 +167,6 @@
         <repository>
             <id>repo.jenkins-ci.org</id>
             <url>https://repo.jenkins-ci.org/public/</url>
-        </repository>
-        <repository>
-            <id>eu.cqse.com</id>
-            <url>https://share.cqse.eu/public/maven/</url>
         </repository>
     </repositories>
     <pluginRepositories>
