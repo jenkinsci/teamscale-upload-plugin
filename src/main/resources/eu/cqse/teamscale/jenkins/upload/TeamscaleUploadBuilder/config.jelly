@@ -21,5 +21,8 @@
     <f:entry title="${%ReportFormatID}" field="reportFormatId">
             <f:textbox />
     </f:entry>
+    <f:entry title="${%Revision}" field="revision">
+                <f:textbox />
+        </f:entry>
 
 </j:jelly>

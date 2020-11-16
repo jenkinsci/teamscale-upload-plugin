@@ -29,7 +29,7 @@ public class TeamscaleUploadUtilities {
         String[] matches = directoryScanner.getIncludedFiles();
         List<File> files = new ArrayList(matches.length);
         for (String match : matches) {
-            files.add(new File(match));
+            files.add(new File(dirToScan + File.separator + match));
         }
         return files;
     }

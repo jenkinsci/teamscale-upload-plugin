@@ -7,7 +7,6 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
-import com.teamscale.client.CommitDescriptor;
 import com.teamscale.client.ITeamscaleService;
 import com.teamscale.client.TeamscaleServiceGenerator;
 import eu.cqse.teamscale.client.JenkinsConsoleInterceptor;
@@ -36,6 +35,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
@@ -46,6 +46,8 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
@@ -91,6 +93,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private final String antPatternForFileScan;
     private final String reportFormatId;
 
+    private String revision;
 
     private String credentialsId;
 
@@ -105,7 +108,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param reportFormatId        to save.
      */
     @DataBoundConstructor
-    public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId) {
+    public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId, String revision) {
         this.url = url;
         this.teamscaleProject = teamscaleProject;
         this.partition = partition;
@@ -113,6 +116,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         this.antPatternForFileScan = antPatternForFileScan;
         this.reportFormatId = reportFormatId;
         this.credentialsId = credentialsId;
+        this.revision = revision;
     }
 
     public String getUrl() {
@@ -147,11 +151,17 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         this.credentialsId = credentialsId;
     }
 
+    public String getRevision(){
+        return revision;
+    }
+
+    @DataBoundSetter
+    public void setRevision(String revision){
+        this.revision = revision;
+    }
+
     @Override
     public void perform(@Nonnull Run<?, ?> run, FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
-
-
-        String timestampToolExecutableName = getPlatformSpecificTimestampToolName();
 
         StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
                 credentialsId,
@@ -163,8 +173,6 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             listener.getLogger().println(ERROR + "credentials are null");
             return;
         }
-
-        copyToolToWorkspace(workspace, listener.getLogger(), timestampToolExecutableName);
 
         HttpUrl url = HttpUrl.parse(getUrl());
         if (url == null) {
@@ -179,27 +187,21 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 new JenkinsConsoleInterceptor(listener.getLogger())
         );
 
-        String revision = getScmRevision(run.getEnvironment(listener));
-        if (revision == null) {
+
+        String rev = getScmRevision(run.getEnvironment(listener));
+        listener.getLogger().println(INFO + "revision: " + revision);
+        if (rev == null) {
             listener.getLogger().println(ERROR + "Could not find any revision. Currently only GIT and SVN are supported.");
             return;
         }
 
-        List<File> files = getFilesToUpload(workspace);
+        List<File> files = TeamscaleUploadUtilities.getFiles(new File(workspace.toURI().getPath()), getAntPatternForFileScan());
 
         if(files.isEmpty()) {
             listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getAntPatternForFileScan() + "\"");
             return;
         }
-        uploadFilesToTeamscale(files, revision);
-    }
-
-    private List<File> getFilesToUpload(FilePath workspace) throws IOException, InterruptedException{
-        List<File> files = TeamscaleUploadUtilities.getFiles(new File(workspace.toURI().getPath()), getAntPatternForFileScan());
-        for (File file : files) {
-            File currentFile = new File(workspace.toURI().getPath() + File.separator + file.toString()); // replace with file.getName()
-        }
-        return files;
+        uploadFilesToTeamscale(files, rev);
     }
 
     /**
@@ -215,62 +217,25 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             }
     }
 
+    /**
+     * Retrieves the SCM revision.
+     * Either takes the parameter from the constructor if it matches certain criteria or checks the environment variables for SVN or GIT revisions.
+     * @param envVars environment variables during run time.
+     * @return null or revision
+     */
     private String getScmRevision(EnvVars envVars) {
+        if(revision != null){
+            Pattern p = Pattern.compile("^((([a-f]|[0-9])+)|([0-9])+)$");
+            Matcher m = p.matcher(revision);
+            if(m.matches()) {
+                return revision;
+            }
+        }
         String gitCommit = envVars.get("GIT_COMMIT");
         if (gitCommit != null) {
             return gitCommit;
         }
         return envVars.get("SVN_REVISION");
-    }
-
-    /**
-     * Copy timestamp tool for version control system to the workspace of the project.
-     *
-     * @param workspace                   of jenkins project.
-     * @param printStream                 writing logging output to.
-     * @param timestampToolExecutableName name of the timestamp executable.
-     * @throws IOException          access on timestamp tool not successful.
-     * @throws InterruptedException executable thread of timestamp tool was interrupted.
-     */
-    private void copyToolToWorkspace(FilePath workspace, @Nonnull PrintStream printStream, String timestampToolExecutableName) throws IOException, InterruptedException {
-        File destination = new File(workspace.toURI().getPath() /*+ File.separator*/ + timestampToolExecutableName);
-        destination.setExecutable(true);
-
-        if (!destination.exists()) {
-            try {
-                InputStream sourceStream = this.getClass().getClassLoader().getResourceAsStream(EXEC_FOLDER + File.separator + timestampToolExecutableName);
-                FileUtils.copyInputStreamToFile(sourceStream, destination);
-                printStream.println(INFO + "Copied timestamp");
-            } catch (IOException e) {
-                printStream.println(e);
-            }
-        } else {
-            printStream.println(INFO + "Did not copy timestamp, it already exists!");
-        }
-    }
-
-    /**
-     * Retrieve branch and timestamp of version control system belonging to the workspace and the project.
-     *
-     * @param workspace               of jenkins project.
-     * @param timestampExecutableName name of the timestamp executable.
-     * @return branch and timestamp ':' separated
-     * @throws IOException          access on timestamp tool not successful.
-     * @throws InterruptedException executable thread of timestamp tool was interrupted.
-     */
-    @Nonnull
-    private String getBranchAndTimeStamp(FilePath workspace, String timestampExecutableName) throws IOException, InterruptedException {
-
-        Process process = Runtime.getRuntime().exec(workspace.toURI().getPath() /*+ File.separator*/ + timestampExecutableName, null, new File(workspace.toURI()));
-
-        InputStream inputStream = process.getInputStream();
-        StringBuilder build = new StringBuilder();
-        int currentRead = inputStream.read();
-        while (currentRead != -1 && currentRead != '\n') {
-            build.append((char) currentRead);
-            currentRead = inputStream.read();
-        }
-        return build.toString();
     }
 
     /**
@@ -297,20 +262,6 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             e.printStackTrace();
         }
     }
-
-    /**
-     * Determine which timestamp tool to use for MAC, Linux or Windows.
-     *
-     * @return timestamp-tool name.
-     */
-    private String getPlatformSpecificTimestampToolName() {
-        String timestampToolExecutableName = "teamscale-timestamp";
-        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-            timestampToolExecutableName += ".exe";
-        }
-        return timestampToolExecutableName;
-    }
-
 
     /**
      * Description/Hint provided if user does not fill out the plugin fields correctly.
