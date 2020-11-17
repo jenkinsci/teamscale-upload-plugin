@@ -15,7 +15,7 @@ Install the plugin from the official marketplace on your jenkins server.
 4. Configure the plugin
 
 <p align="center">
-  <img src="https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/freestyle_rpoject_config.png">
+  <img src="https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/freestyle_project_config.png">
 </p>
   
 - **URL:** http://www.yoururl.com:port or http://ip-adress:port
