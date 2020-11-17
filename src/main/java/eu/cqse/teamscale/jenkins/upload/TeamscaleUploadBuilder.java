@@ -42,10 +42,7 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -84,8 +81,6 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      */
     public static final String INFO = "TS-INFO: ";
 
-    private static final String EXEC_FOLDER = "exec";
-
     private final String url;
     private final String teamscaleProject;
     private final String partition;
@@ -106,6 +101,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param uploadMessage         to save.
      * @param antPatternForFileScan to save.
      * @param reportFormatId        to save.
+     * @param revision              to save.
      */
     @DataBoundConstructor
     public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId, String revision) {
@@ -207,10 +203,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Upload test results specified by ant-pattern to the teamscale server.
      *
-     * @throws IOException          access on timestamp tool not successful.
-     * @throws InterruptedException executable thread of timestamp tool was interrupted.
+     * @throws IOException          read of files not successful.
      */
-    private void uploadFilesToTeamscale(List<File> files, String revision) throws IOException, InterruptedException {
+    private void uploadFilesToTeamscale(List<File> files, String revision) throws IOException {
             for (File file : files) {
                 String fileContentAsString = FileUtils.readFileToString(new File(file.getPath()), "UTF-8");
                 uploadReport(fileContentAsString, revision);
@@ -244,7 +239,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param data     to upload.
      * @param revision coverage is applied to.
      */
-    private void uploadReport(String data, String revision) {
+    private void uploadReport(String data, String revision)  {
         Call<ResponseBody> apiRequest = api.uploadExternalReport(
                 getTeamscaleProject(),
                 getReportFormatId(),
@@ -255,11 +250,10 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 getUploadMessage(),
                 RequestBody.create(data, MultipartBody.FORM)
         );
-
         try {
             apiRequest.execute();
         } catch (IOException e) {
-            e.printStackTrace();
+            // Do nothing
         }
     }
 

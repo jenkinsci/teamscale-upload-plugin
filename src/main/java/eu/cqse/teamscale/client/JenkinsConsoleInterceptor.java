@@ -16,6 +16,10 @@ public class JenkinsConsoleInterceptor implements Interceptor {
 
     private PrintStream stream;
 
+    /**
+     * Constructor for intercepting the console output.
+     * @param stream printstream of jenkins console.
+     */
     public JenkinsConsoleInterceptor(PrintStream stream) {
         this.stream = stream;
     }
