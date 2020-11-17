@@ -3,39 +3,109 @@
 Plugin for Jenkins that provides an after build step task for 
 uploading external code coverage to teamscale. 
 
-
-
-
-
 ## Getting started
-1. Install the plugin on your jenkins server
-2. Create a freestyle project in Jenkins
+Install the plugin from the official marketplace on your jenkins server.
+
+### Freestyle Project 
+1. Create a freestyle project in Jenkins
 ![](https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/create_freestyle_project.gif)
-3. Also specifically checkout the branch which is cloned from jenkins that the plugin works correctly.
+2. Also specifically checkout the branch which is cloned from jenkins, so the plugin works correctly.
 ![](https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/checkout_local_branch.gif)
-4. Add the Teamscale Upload plugin as post-build action
-5. Configure the plugin
+3. Add the Teamscale Upload plugin as post-build action
+4. Configure the plugin
 
 <p align="center">
-  <img src="https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/teamscale_upload_plugin_configuration.png">
+  <img src="https://github.com/jenkinsci/teamscale-upload-plugin/blob/master/doc/freestyle_rpoject_config.png">
 </p>
   
-* <b>URL</b>: http://www.yoururl.com:port or http://ip-adress:port
-* <b>Username</b>: user in Teamscale instance
-* <b>IDE Key</b>: generated IDE key for the user
-* <b>Project</b>: project in Teamscale
-* <b>Partition</b>: The partition of the project to push code coverage to
-* <b>Upload Message</b>: Any message for the uploaded data
-* <b>File Format</b>: Ant-pattern style to look for files (here: looking in all directories for .simple files)
-* <b>Report Format ID</b>: Matching ID in teamscale, ask your teamscale consultant (may be automatic mapped in the future)
+- **URL:** http://www.yoururl.com:port or http://ip-adress:port
+- **Credentials:** Select jenkins global credentials consisting of _Teamscale Username_ and _IDE Access Key_ (from _http://your-teamscale-url/user.html#access-key_).
+ In jenkins use username and password for storing these information. 
+- **Project:** in Teamscale to upload data to.
+- **Partition:** The partition of the project to push code coverage to.
+- **Upload Message:** Desired message for the data which will be uploaded.
+- **File Format:** Ant-pattern for file selection in the jenkins working directory (e.g. here: selecting all *.simple files in working directory)
+- **Report Format ID:** Use the PARAMETER VALUE in [supported formats](https://docs.teamscale.com/reference/upload-formats-and-samples/#supported-formats-for-upload). 
+- **Revision:** Please leave this one empty! Only needed for the pipeline build steps. 
 
+### Declarative Pipeline
 
+<details>
+<summary>Git sample</summary>
 
-  
+```groovy
+pipeline {
+    agent any
+    
+    stages {
+         stage('Stage 1') { 
+            steps {
+                git 'https://github.com/Test/test.git' // OR 
+                // checkout([$class: 'GitSCM', 
+                //  branches: [[name: '*/master']], 
+                //  doGenerateSubmoduleConfigurations: false, 
+                //  extensions: [[$class: 'LocalBranch', localBranch: 'master']], 
+                //  submoduleCfg: [], 
+                //  userRemoteConfigs: [[url: 'https://github.com/Test/test']]])  
+                //  OR checkout([$class: 'SubversionSCM', remote: 'http://sv-server/repository/trunk']]]) --> Change handover revision of env var to  ${SVN_REVISION}
+                teamscale antPatternForFileScan: '**/*.simple', credentialsId: 'teamscale_id', partition: 'pipeline', reportFormatId: 'SIMPLE', teamscaleProject: 'jenkinsplugin', uploadMessage: 'Test', url: 'http://localhost:8100', revision: "${GIT_COMMIT}"
+            }
+        }
 
+         stage('Stage 2') {
+            steps {
+               teamscale antPatternForFileScan: '**/*.simple', credentialsId: 'teamscale_id', partition: 'pipeline', reportFormatId: 'SIMPLE', teamscaleProject: 'jenkinsplugin', uploadMessage: 'Test', url: 'http://localhost:8100', revision: "${GIT_COMMIT}"
+               teamscale antPatternForFileScan: '**/*.simple', credentialsId: 'teamscale_id', partition: 'pipeline', reportFormatId: 'SIMPLE', teamscaleProject: 'jenkinsplugin', uploadMessage: 'Test', url: 'http://localhost:8100', revision: "${GIT_COMMIT}"
+          
+            }
+        }
+    }
+    post { 
+            always {
+              teamscale antPatternForFileScan: '**/*.simple', credentialsId: 'teamscale_id', partition: 'pipeline', reportFormatId: 'SIMPLE', teamscaleProject: 'jenkinsplugin', uploadMessage: 'Test', url: 'http://localhost:8100', revision: "${GIT_COMMIT}"
+              teamscale antPatternForFileScan: '**/*.simple', credentialsId: 'teamscale_id', partition: 'pipeline', reportFormatId: 'SIMPLE', teamscaleProject: 'jenkinsplugin', uploadMessage: 'Test', url: 'http://localhost:8100', revision: "${GIT_COMMIT}"
+          
+            }
+    }
+}
+```
 
+</details>
 
+<details>
+<summary>SVN sample</summary>
 
+```groovy
+pipeline {
+    agent any
+    
+    stages {
+         stage('Stage 1') { 
+            steps {
+                checkout([$class: 'SubversionSCM', remote: 'http://sv-server/repository/trunk']]])  
+                teamscale antPatternForFileScan: '**/*.simple', credentialsId: 'teamscale_id', partition: 'pipeline', reportFormatId: 'SIMPLE', teamscaleProject: 'jenkinsplugin', uploadMessage: 'Test', url: 'http://localhost:8100', revision: "${SVN_REVISION}"
+            }
+        }
+
+         stage('Stage 2') {
+            steps {
+               teamscale antPatternForFileScan: '**/*.simple', credentialsId: 'teamscale_id', partition: 'pipeline', reportFormatId: 'SIMPLE', teamscaleProject: 'jenkinsplugin', uploadMessage: 'Test', url: 'http://localhost:8100', revision: "${SVN_REVISION}"
+               teamscale antPatternForFileScan: '**/*.simple', credentialsId: 'teamscale_id', partition: 'pipeline', reportFormatId: 'SIMPLE', teamscaleProject: 'jenkinsplugin', uploadMessage: 'Test', url: 'http://localhost:8100', revision: "${SVN_REVISION}"
+          
+            }
+        }
+    }
+    post { 
+            always {
+              teamscale antPatternForFileScan: '**/*.simple', credentialsId: 'teamscale_id', partition: 'pipeline', reportFormatId: 'SIMPLE', teamscaleProject: 'jenkinsplugin', uploadMessage: 'Test', url: 'http://localhost:8100', revision: "${SVN_REVISION}"
+              teamscale antPatternForFileScan: '**/*.simple', credentialsId: 'teamscale_id', partition: 'pipeline', reportFormatId: 'SIMPLE', teamscaleProject: 'jenkinsplugin', uploadMessage: 'Test', url: 'http://localhost:8100', revision: "${SVN_REVISION}"
+          
+            }
+    }
+}
+```
+
+</details>
 
 ## For Developers
 
