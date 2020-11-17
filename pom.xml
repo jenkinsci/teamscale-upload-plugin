@@ -9,7 +9,7 @@
     </parent>
     <groupId>io.jenkins.plugins</groupId>
     <artifactId>teamscale-upload</artifactId>
-    <version>1.4-SNAPSHOT</version>
+    <version>1.4</version>
 
 
     <name>teamscale-upload</name>
