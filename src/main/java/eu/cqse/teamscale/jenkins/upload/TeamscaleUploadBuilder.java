@@ -88,6 +88,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private final String antPatternForFileScan;
     private final String reportFormatId;
 
+    // TODO (ToP) There is no documentation for this parameter in the pipeline docs.
+    //   Since it's marked as optional, I'd explain that it's actually required in pipeline projects.
     private String revision;
 
     private String credentialsId;
