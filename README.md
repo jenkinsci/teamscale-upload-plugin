@@ -24,6 +24,7 @@ Install the plugin from the official marketplace on your jenkins server.
 - **Project:** in Teamscale to upload data to.
 - **Partition:** The partition of the project to push code coverage to.
 - **Upload Message:** Desired message for the data which will be uploaded.
+// TODO (ToP) remove the documentation from the readme and replace it with a link to our userguide (docs.teamscale.com)
 - **File Format:** Ant-pattern for file selection in the jenkins working directory (e.g. here: selecting all *.simple files in working directory)
 - **Report Format ID:** Use the PARAMETER VALUE in [supported formats](https://docs.teamscale.com/reference/upload-formats-and-samples/#supported-formats-for-upload). 
 - **Revision:** Please leave this one empty! Only needed for the pipeline build steps. 

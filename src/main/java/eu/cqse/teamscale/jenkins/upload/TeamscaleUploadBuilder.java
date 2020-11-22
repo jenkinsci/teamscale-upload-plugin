@@ -12,8 +12,8 @@ import com.teamscale.client.TeamscaleServiceGenerator;
 import eu.cqse.teamscale.client.JenkinsConsoleInterceptor;
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.Launcher;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
 import hudson.model.Queue;
@@ -21,22 +21,25 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
 import hudson.security.ACL;
+import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
-import hudson.tasks.BuildStepDescriptor;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.tasks.SimpleBuildStep;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import retrofit2.Call;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
@@ -45,10 +48,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import jenkins.tasks.SimpleBuildStep;
-import org.jenkinsci.Symbol;
-import retrofit2.Call;
 
 /**
  * The Teamscale Jenkins plugin.
@@ -85,6 +84,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private final String teamscaleProject;
     private final String partition;
     private final String uploadMessage;
+    // TODO (ToP) rename to include pattern
     private final String antPatternForFileScan;
     private final String reportFormatId;
 
@@ -101,16 +101,19 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param teamscaleProject      to save.
      * @param partition             to save.
      * @param uploadMessage         to save.
+     *                              TODO (ToP) rename to include pattern
      * @param antPatternForFileScan to save.
      * @param reportFormatId        to save.
      * @param revision              to save.
      */
     @DataBoundConstructor
+    // TODO (ToP) rename to include pattern
     public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId, String revision) {
         this.url = url;
         this.teamscaleProject = teamscaleProject;
         this.partition = partition;
         this.uploadMessage = uploadMessage;
+        // TODO (ToP) rename to include pattern
         this.antPatternForFileScan = antPatternForFileScan;
         this.reportFormatId = reportFormatId;
         this.credentialsId = credentialsId;
@@ -133,6 +136,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return uploadMessage;
     }
 
+    // TODO (ToP) rename to include pattern
     public String getAntPatternForFileScan() {
         return antPatternForFileScan;
     }
@@ -149,12 +153,12 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         this.credentialsId = credentialsId;
     }
 
-    public String getRevision(){
+    public String getRevision() {
         return revision;
     }
 
     @DataBoundSetter
-    public void setRevision(String revision){
+    public void setRevision(String revision) {
         this.revision = revision;
     }
 
@@ -195,7 +199,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         List<File> files = TeamscaleUploadUtilities.getFiles(new File(workspace.toURI().getPath()), getAntPatternForFileScan());
 
-        if(files.isEmpty()) {
+        if (files.isEmpty()) {
             listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getAntPatternForFileScan() + "\"");
             return;
         }
@@ -205,26 +209,27 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Upload test results specified by ant-pattern to the teamscale server.
      *
-     * @throws IOException          read of files not successful.
+     * @throws IOException read of files not successful.
      */
     private void uploadFilesToTeamscale(List<File> files, String revision) throws IOException {
-            for (File file : files) {
-                String fileContentAsString = FileUtils.readFileToString(new File(file.getPath()), "UTF-8");
-                uploadReport(fileContentAsString, revision);
-            }
+        for (File file : files) {
+            String fileContentAsString = FileUtils.readFileToString(new File(file.getPath()), "UTF-8");
+            uploadReport(fileContentAsString, revision);
+        }
     }
 
     /**
      * Retrieves the SCM revision.
      * Either takes the parameter from the constructor if it matches certain criteria or checks the environment variables for SVN or GIT revisions.
+     *
      * @param envVars environment variables during run time.
      * @return null or revision
      */
     private String getScmRevision(EnvVars envVars) {
-        if(revision != null){
+        if (revision != null) {
             Pattern p = Pattern.compile("^((([a-f]|[0-9])+)|([0-9])+)$");
             Matcher m = p.matcher(revision);
-            if(m.matches()) {
+            if (m.matches()) {
                 return revision;
             }
         }
@@ -241,7 +246,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param data     to upload.
      * @param revision coverage is applied to.
      */
-    private void uploadReport(String data, String revision)  {
+    private void uploadReport(String data, String revision) {
         Call<ResponseBody> apiRequest = api.uploadExternalReport(
                 getTeamscaleProject(),
                 getReportFormatId(),
@@ -286,6 +291,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return getFormValidation(value);
         }
 
+        // TODO (ToP) rename to include pattern
         public FormValidation doCheckAntPatternForFileScan(@QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
