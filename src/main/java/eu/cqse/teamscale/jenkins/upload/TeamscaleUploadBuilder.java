@@ -84,12 +84,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private final String teamscaleProject;
     private final String partition;
     private final String uploadMessage;
-    // TODO (ToP) rename to include pattern
-    private final String antPatternForFileScan;
+    private final String includePattern;
     private final String reportFormatId;
 
-    // TODO (ToP) There is no documentation for this parameter in the pipeline docs.
-    //   Since it's marked as optional, I'd explain that it's actually required in pipeline projects.
     private String revision;
 
     private String credentialsId;
@@ -101,20 +98,17 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param teamscaleProject      to save.
      * @param partition             to save.
      * @param uploadMessage         to save.
-     *                              TODO (ToP) rename to include pattern
-     * @param antPatternForFileScan to save.
+     * @param includePattern        to save.
      * @param reportFormatId        to save.
-     * @param revision              to save.
+     * @param revision              to save. Required in pipeline projects.
      */
     @DataBoundConstructor
-    // TODO (ToP) rename to include pattern
-    public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String antPatternForFileScan, String reportFormatId, String revision) {
+    public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String includePattern, String reportFormatId, String revision) {
         this.url = url;
         this.teamscaleProject = teamscaleProject;
         this.partition = partition;
         this.uploadMessage = uploadMessage;
-        // TODO (ToP) rename to include pattern
-        this.antPatternForFileScan = antPatternForFileScan;
+        this.includePattern = includePattern;
         this.reportFormatId = reportFormatId;
         this.credentialsId = credentialsId;
         this.revision = revision;
@@ -136,9 +130,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return uploadMessage;
     }
 
-    // TODO (ToP) rename to include pattern
-    public String getAntPatternForFileScan() {
-        return antPatternForFileScan;
+    public String getIncludePattern() {
+        return includePattern;
     }
 
     public String getReportFormatId() {
@@ -197,10 +190,10 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return;
         }
 
-        List<File> files = TeamscaleUploadUtilities.getFiles(new File(workspace.toURI().getPath()), getAntPatternForFileScan());
+        List<File> files = TeamscaleUploadUtilities.getFiles(new File(workspace.toURI().getPath()), getIncludePattern());
 
         if (files.isEmpty()) {
-            listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getAntPatternForFileScan() + "\"");
+            listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getIncludePattern() + "\"");
             return;
         }
         uploadFilesToTeamscale(files, rev);
@@ -291,8 +284,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return getFormValidation(value);
         }
 
-        // TODO (ToP) rename to include pattern
-        public FormValidation doCheckAntPatternForFileScan(@QueryParameter String value)
+        public FormValidation doCheckIncludePattern(@QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
         }

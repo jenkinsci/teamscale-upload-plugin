@@ -15,7 +15,7 @@
     <f:entry title="${%UploadMessage}" field="uploadMessage">
         <f:textbox />
     </f:entry>
-    <f:entry title="${%AntPattern}" field="antPatternForFileScan">
+    <f:entry title="${%IncludePattern}" field="includePattern">
             <f:textbox />
     </f:entry>
     <f:entry title="${%ReportFormatID}" field="reportFormatId">
