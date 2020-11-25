@@ -28,7 +28,7 @@ public class TeamscaleUploadBuilderTest {
     }
 
     @Test
-    public void testConfigRoundtripFrench() throws Exception {
+    public void testPipelineWithoutCredentials() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         project.setScm(new SingleFileSCM("test.simple", "RunExec.java\n8-10"));
         TeamscaleUploadBuilder publisher = new TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId, "");
