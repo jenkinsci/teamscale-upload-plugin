@@ -94,7 +94,6 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Automatic data binding on save of the plugin configuration in jenkins.
      *
-     * TODO (ToP) In the documentation of this parameter Teamscale is written in lower case
      * @param url                   to save.
      * @param teamscaleProject      to save.
      * @param partition             to save.
