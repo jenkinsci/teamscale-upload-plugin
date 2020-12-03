@@ -4,7 +4,7 @@ Plugin for Jenkins that provides an after build step task for
 uploading external code coverage to teamscale. 
 
 ## Getting started
-See [documentation](https://docs.teamscale.com/)  
+See [documentation](https://docs.teamscale.com/reference/jenkins-plugin)  
 
 ## For Developers
 
