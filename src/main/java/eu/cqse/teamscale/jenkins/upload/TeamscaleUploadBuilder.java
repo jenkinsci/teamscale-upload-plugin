@@ -194,8 +194,6 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return;
         }
 
-        //List<File> files = TeamscaleUploadUtilities.getFiles(new File(workspace.toURI().getPath()), getIncludePattern());
-
         List<FilePath> files = new ArrayList<>();
 
         workspace.act(new FilePath.FileCallable<FilePath[]>() {
