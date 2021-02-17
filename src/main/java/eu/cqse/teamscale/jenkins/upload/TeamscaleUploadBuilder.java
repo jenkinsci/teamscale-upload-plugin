@@ -20,6 +20,7 @@ import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
+import hudson.remoting.VirtualChannel;
 import hudson.security.ACL;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Notifier;
@@ -34,7 +35,9 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.tools.ant.DirectoryScanner;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -45,6 +48,7 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -190,7 +194,27 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return;
         }
 
-        List<File> files = TeamscaleUploadUtilities.getFiles(new File(workspace.toURI().getPath()), getIncludePattern());
+        //List<File> files = TeamscaleUploadUtilities.getFiles(new File(workspace.toURI().getPath()), getIncludePattern());
+
+        List<FilePath> files = new ArrayList<>();
+
+        workspace.act(new FilePath.FileCallable<FilePath[]>() {
+            @Override
+            public void checkRoles(RoleChecker roleChecker) throws SecurityException {
+
+            }
+            @Override
+            public FilePath[] invoke(File directory, VirtualChannel virtualChannel) throws IOException, InterruptedException {
+                DirectoryScanner directoryScanner = new DirectoryScanner();
+                directoryScanner.setBasedir(directory);
+                directoryScanner.setIncludes(new String[]{getIncludePattern()});
+                directoryScanner.scan();
+                for (String file : directoryScanner.getIncludedFiles()) {
+                    files.add(new FilePath(new File(file)));
+                }
+                return null;
+            }
+        });
 
         if (files.isEmpty()) {
             listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getIncludePattern() + "\"");
@@ -204,9 +228,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      *
      * @throws IOException read of files not successful.
      */
-    private void uploadFilesToTeamscale(List<File> files, String revision) throws IOException {
-        for (File file : files) {
-            String fileContentAsString = FileUtils.readFileToString(new File(file.getPath()), "UTF-8");
+    private void uploadFilesToTeamscale(List<FilePath> files, String revision) throws IOException, InterruptedException {
+        for (FilePath file : files) {
+            String fileContentAsString = file.readToString();
             uploadReport(fileContentAsString, revision);
         }
     }
