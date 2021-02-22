@@ -197,6 +197,10 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         List<FilePath> files = new ArrayList<>();
 
         workspace.act(new FilePath.FileCallable<FilePath[]>() {
+
+            private static final long serialVersionUID = 1L;
+
+
             @Override
             public void checkRoles(RoleChecker roleChecker) throws SecurityException {
 
