@@ -27,6 +27,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import okhttp3.HttpUrl;
@@ -194,31 +195,14 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return;
         }
 
-        List<FilePath> files = new ArrayList<>();
 
-        workspace.act(new FilePath.FileCallable<FilePath[]>() {
-            @Override
-            public void checkRoles(RoleChecker roleChecker) throws SecurityException {
+        List<String> reports = workspace.act(new CoverageCollectingFileCallable(new String[]{getIncludePattern()}));
 
-            }
-            @Override
-            public FilePath[] invoke(File directory, VirtualChannel virtualChannel) throws IOException, InterruptedException {
-                DirectoryScanner directoryScanner = new DirectoryScanner();
-                directoryScanner.setBasedir(directory);
-                directoryScanner.setIncludes(new String[]{getIncludePattern()});
-                directoryScanner.scan();
-                for (String file : directoryScanner.getIncludedFiles()) {
-                    files.add(new FilePath(new File(file)));
-                }
-                return null;
-            }
-        });
-
-        if (files.isEmpty()) {
+        if (reports.isEmpty()) {
             listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getIncludePattern() + "\"");
             return;
         }
-        uploadFilesToTeamscale(files, rev);
+        uploadFilesToTeamscale(reports, rev);
     }
 
     /**
@@ -226,10 +210,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      *
      * @throws IOException read of files not successful.
      */
-    private void uploadFilesToTeamscale(List<FilePath> files, String revision) throws IOException, InterruptedException {
-        for (FilePath file : files) {
-            String fileContentAsString = file.readToString();
-            uploadReport(fileContentAsString, revision);
+    private void uploadFilesToTeamscale(List<String> reports, String revision) throws IOException, InterruptedException {
+        for (String report : reports) {
+            uploadReport(report, revision);
         }
     }
 
@@ -412,4 +395,33 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     }
 
+    private static class CoverageCollectingFileCallable extends MasterToSlaveFileCallable<List<String>> {
+
+        private static final long serialVersionUID = 1L;
+
+       private final String[] includes;
+
+        public CoverageCollectingFileCallable(String[] includes) {
+            this.includes = includes;
+        }
+
+
+        @Override
+        public void checkRoles(RoleChecker roleChecker) throws SecurityException {
+
+        }
+
+        @Override
+        public List<String> invoke(File directory, VirtualChannel virtualChannel) throws IOException, InterruptedException {
+            DirectoryScanner directoryScanner = new DirectoryScanner();
+            directoryScanner.setBasedir(directory);
+            directoryScanner.setIncludes(includes);
+            directoryScanner.scan();
+             List<String> reports  = new ArrayList<>();
+            for (String file : directoryScanner.getIncludedFiles()) {
+                reports.add(FileUtils.readFileToString(new File(directory, file), "UTF-8"));
+            }
+            return reports;
+        }
+    }
 }
