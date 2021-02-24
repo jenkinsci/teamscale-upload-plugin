@@ -7,6 +7,7 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import com.teamscale.client.EReportFormat;
 import com.teamscale.client.ITeamscaleService;
 import com.teamscale.client.TeamscaleServiceGenerator;
 import eu.cqse.teamscale.client.JenkinsConsoleInterceptor;
@@ -53,6 +54,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * The Teamscale Jenkins plugin.
@@ -202,19 +204,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getIncludePattern() + "\"");
             return;
         }
-        uploadFilesToTeamscale(reports, rev);
+        uploadReports(reports, rev);
     }
 
-    /**
-     * Upload test results specified by ant-pattern to the teamscale server.
-     *
-     * @throws IOException read of files not successful.
-     */
-    private void uploadFilesToTeamscale(List<String> reports, String revision) throws IOException, InterruptedException {
-        for (String report : reports) {
-            uploadReport(report, revision);
-        }
-    }
 
     /**
      * Retrieves the SCM revision.
@@ -238,22 +230,18 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return envVars.get("SVN_REVISION");
     }
 
-    /**
-     * Performs an upload of an external report.
-     *
-     * @param data     to upload.
-     * @param revision coverage is applied to.
-     */
-    private void uploadReport(String data, String revision) {
-        Call<ResponseBody> apiRequest = api.uploadExternalReport(
+    private void uploadReports(List<String> reportContents, String revision) {
+        List<MultipartBody.Part> parts = reportContents.stream().map(content -> MultipartBody.Part.create(RequestBody.create(content, MultipartBody.FORM))).collect(Collectors.toList());
+
+        Call<ResponseBody> apiRequest = api.uploadExternalReports(
                 getTeamscaleProject(),
-                getReportFormatId(),
+                EReportFormat.valueOf(getReportFormatId().toUpperCase()),
                 null,
                 revision,
                 true,
                 getPartition(),
                 getUploadMessage(),
-                RequestBody.create(data, MultipartBody.FORM)
+                parts
         );
         try {
             apiRequest.execute();
