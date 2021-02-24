@@ -51,7 +51,9 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -101,13 +103,13 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Automatic data binding on save of the plugin configuration in jenkins.
      *
-     * @param url                   to save.
-     * @param teamscaleProject      to save.
-     * @param partition             to save.
-     * @param uploadMessage         to save.
-     * @param includePattern        to save.
-     * @param reportFormatId        to save.
-     * @param revision              to save. Required in pipeline projects.
+     * @param url              to save.
+     * @param teamscaleProject to save.
+     * @param partition        to save.
+     * @param uploadMessage    to save.
+     * @param includePattern   to save.
+     * @param reportFormatId   to save.
+     * @param revision         to save. Required in pipeline projects.
      */
     @DataBoundConstructor
     public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String includePattern, String reportFormatId, String revision) {
@@ -198,7 +200,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
 
-        List<String> reports = workspace.act(new CoverageCollectingFileCallable(new String[]{getIncludePattern()}));
+        Map<String, String> reports = workspace.act(new CoverageCollectingFileCallable(new String[]{getIncludePattern()}));
 
         if (reports.isEmpty()) {
             listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getIncludePattern() + "\"");
@@ -230,8 +232,12 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return envVars.get("SVN_REVISION");
     }
 
-    private void uploadReports(List<String> reportContents, String revision) {
-        List<MultipartBody.Part> parts = reportContents.stream().map(content -> MultipartBody.Part.create(RequestBody.create(content, MultipartBody.FORM))).collect(Collectors.toList());
+    private void uploadReports(Map<String, String> reports, String revision) {
+        List<MultipartBody.Part> parts = new ArrayList<>();
+        for (String file : reports.keySet()) {
+            parts.add(MultipartBody.Part.createFormData("report", file, RequestBody.create(reports.get(file), MultipartBody.FORM)));
+        }
+
 
         Call<ResponseBody> apiRequest = api.uploadExternalReports(
                 getTeamscaleProject(),
@@ -383,11 +389,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     }
 
-    private static class CoverageCollectingFileCallable extends MasterToSlaveFileCallable<List<String>> {
+    private static class CoverageCollectingFileCallable extends MasterToSlaveFileCallable<Map<String, String>> {
 
         private static final long serialVersionUID = 1L;
 
-       private final String[] includes;
+        private final String[] includes;
 
         public CoverageCollectingFileCallable(String[] includes) {
             this.includes = includes;
@@ -400,14 +406,14 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @Override
-        public List<String> invoke(File directory, VirtualChannel virtualChannel) throws IOException, InterruptedException {
+        public Map<String, String> invoke(File directory, VirtualChannel virtualChannel) throws IOException, InterruptedException {
             DirectoryScanner directoryScanner = new DirectoryScanner();
             directoryScanner.setBasedir(directory);
             directoryScanner.setIncludes(includes);
             directoryScanner.scan();
-             List<String> reports  = new ArrayList<>();
+            Map<String, String> reports = new HashMap<>();
             for (String file : directoryScanner.getIncludedFiles()) {
-                reports.add(FileUtils.readFileToString(new File(directory, file), "UTF-8"));
+                reports.put(file, FileUtils.readFileToString(new File(directory, file), "UTF-8"));
             }
             return reports;
         }
