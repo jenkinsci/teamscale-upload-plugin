@@ -7,6 +7,7 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import com.teamscale.client.EReportFormat;
 import com.teamscale.client.ITeamscaleService;
 import com.teamscale.client.TeamscaleServiceGenerator;
 import eu.cqse.teamscale.client.JenkinsConsoleInterceptor;
@@ -49,10 +50,14 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * The Teamscale Jenkins plugin.
@@ -99,13 +104,13 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Automatic data binding on save of the plugin configuration in jenkins.
      *
-     * @param url                   to save.
-     * @param teamscaleProject      to save.
-     * @param partition             to save.
-     * @param uploadMessage         to save.
-     * @param includePattern        to save.
-     * @param reportFormatId        to save.
-     * @param revision              to save. Required in pipeline projects.
+     * @param url              to save.
+     * @param teamscaleProject to save.
+     * @param partition        to save.
+     * @param uploadMessage    to save.
+     * @param includePattern   to save.
+     * @param reportFormatId   to save.
+     * @param revision         to save. Required in pipeline projects.
      */
     @DataBoundConstructor
     public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String includePattern, String reportFormatId, String revision) {
@@ -196,25 +201,15 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
 
-        List<String> reports = workspace.act(new CoverageCollectingFileCallable(new String[]{getIncludePattern()}));
+        Map<String, String> reports = workspace.act(new CoverageCollectingFileCallable(new String[]{getIncludePattern()}));
 
         if (reports.isEmpty()) {
             listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getIncludePattern() + "\"");
             return;
         }
-        uploadFilesToTeamscale(reports, rev);
+        uploadReports(reports, rev);
     }
 
-    /**
-     * Upload test results specified by ant-pattern to the teamscale server.
-     *
-     * @throws IOException read of files not successful.
-     */
-    private void uploadFilesToTeamscale(List<String> reports, String revision) throws IOException, InterruptedException {
-        for (String report : reports) {
-            uploadReport(report, revision);
-        }
-    }
 
     /**
      * Retrieves the SCM revision.
@@ -238,22 +233,23 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return envVars.get("SVN_REVISION");
     }
 
-    /**
-     * Performs an upload of an external report.
-     *
-     * @param data     to upload.
-     * @param revision coverage is applied to.
-     */
-    private void uploadReport(String data, String revision) {
-        Call<ResponseBody> apiRequest = api.uploadExternalReport(
+    private void uploadReports(Map<String, String> reports, String revision) {
+        List<MultipartBody.Part> parts = new ArrayList<>();
+        for (Map.Entry<String, String> filenameAndReportContent : reports.entrySet()) {
+            parts.add(MultipartBody.Part.createFormData("report", filenameAndReportContent.getKey(),
+                    RequestBody.create(filenameAndReportContent.getValue(), MultipartBody.FORM)));
+        }
+
+
+        Call<ResponseBody> apiRequest = api.uploadExternalReports(
                 getTeamscaleProject(),
-                getReportFormatId(),
+                EReportFormat.valueOf(getReportFormatId().toUpperCase()),
                 null,
                 revision,
                 true,
                 getPartition(),
                 getUploadMessage(),
-                RequestBody.create(data, MultipartBody.FORM)
+                parts
         );
         try {
             apiRequest.execute();
@@ -395,11 +391,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     }
 
-    private static class CoverageCollectingFileCallable extends MasterToSlaveFileCallable<List<String>> {
+    private static class CoverageCollectingFileCallable extends MasterToSlaveFileCallable<Map<String, String>> {
 
         private static final long serialVersionUID = 1L;
 
-       private final String[] includes;
+        private final String[] includes;
 
         public CoverageCollectingFileCallable(String[] includes) {
             this.includes = includes;
@@ -412,14 +408,14 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @Override
-        public List<String> invoke(File directory, VirtualChannel virtualChannel) throws IOException, InterruptedException {
+        public Map<String, String> invoke(File directory, VirtualChannel virtualChannel) throws IOException, InterruptedException {
             DirectoryScanner directoryScanner = new DirectoryScanner();
             directoryScanner.setBasedir(directory);
             directoryScanner.setIncludes(includes);
             directoryScanner.scan();
-             List<String> reports  = new ArrayList<>();
+            Map<String, String> reports = new HashMap<>();
             for (String file : directoryScanner.getIncludedFiles()) {
-                reports.add(FileUtils.readFileToString(new File(directory, file), "UTF-8"));
+                reports.put(file, FileUtils.readFileToString(new File(directory, file), StandardCharsets.UTF_8));
             }
             return reports;
         }

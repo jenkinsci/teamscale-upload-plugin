@@ -110,7 +110,14 @@
         <dependency>
             <groupId>com.teamscale</groupId>
             <artifactId>teamscale-client</artifactId>
-            <version>20.0.0</version>
+            <version>21.0.0</version>
+        </dependency>
+
+        <!-- We need 1.15 as it is required by teamscale-client and the Baseline Jenkins version (line 21) provides only 1.14 -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.15</version>
         </dependency>
 
         <dependency>
