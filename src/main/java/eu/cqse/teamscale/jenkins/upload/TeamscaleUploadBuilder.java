@@ -50,6 +50,7 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -234,8 +235,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     private void uploadReports(Map<String, String> reports, String revision) {
         List<MultipartBody.Part> parts = new ArrayList<>();
-        for (String file : reports.keySet()) {
-            parts.add(MultipartBody.Part.createFormData("report", file, RequestBody.create(reports.get(file), MultipartBody.FORM)));
+        for (Map.Entry<String, String> filenameAndReportContent : reports.entrySet()) {
+            parts.add(MultipartBody.Part.createFormData("report", filenameAndReportContent.getKey(),
+                    RequestBody.create(filenameAndReportContent.getValue(), MultipartBody.FORM)));
         }
 
 
@@ -413,7 +415,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             directoryScanner.scan();
             Map<String, String> reports = new HashMap<>();
             for (String file : directoryScanner.getIncludedFiles()) {
-                reports.put(file, FileUtils.readFileToString(new File(directory, file), "UTF-8"));
+                reports.put(file, FileUtils.readFileToString(new File(directory, file), StandardCharsets.UTF_8));
             }
             return reports;
         }
