@@ -44,7 +44,12 @@ Consider reading [this](https://jenkins.io/doc/developer/plugin-governance/manag
 
 As Maintainer:
 Consider reading [Releasing  jenkins plugin](https://jenkins.io/doc/developer/publishing/releasing/)
+- Ensure you have the credentials for `maven.jenkins-ci.org` added to your `~/.m2/settings.xml` as described [here](https://maven.apache.org/settings.html).
+- Run the following command
 ```bash
 mvn release:prepare release:perform
 ```
+- During the execution of the command enter the desired version numbers (performing and committing the changes happens automatically)
+- Push the newly created tag to origin once the command succeeds
+
 
