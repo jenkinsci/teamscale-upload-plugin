@@ -89,20 +89,20 @@
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>retrofit</artifactId>
-            <version>2.6.1</version>
+            <version>2.9.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.squareup.retrofit2/converter-moshi -->
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>converter-moshi</artifactId>
-            <version>2.6.1</version>
+            <version>2.9.0</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.26</version>
+            <version>1.7.30</version>
         </dependency>
 
         <!-- Teamscale Client -->
@@ -110,7 +110,7 @@
         <dependency>
             <groupId>com.teamscale</groupId>
             <artifactId>teamscale-client</artifactId>
-            <version>21.0.0</version>
+            <version>21.8.0</version>
         </dependency>
 
         <!-- We need 1.15 as it is required by teamscale-client and the Baseline Jenkins version (line 21) provides only 1.14 -->
