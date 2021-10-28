@@ -106,11 +106,10 @@
         </dependency>
 
         <!-- Teamscale Client -->
-        <!-- Upgrade to 0.3.4 -->
         <dependency>
             <groupId>com.teamscale</groupId>
             <artifactId>teamscale-client</artifactId>
-            <version>21.8.0</version>
+            <version>21.9.0</version>
         </dependency>
 
         <!-- We need 1.15 as it is required by teamscale-client and the Baseline Jenkins version (line 21) provides only 1.14 -->
