@@ -243,7 +243,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         Call<ResponseBody> apiRequest = api.uploadExternalReports(
                 getTeamscaleProject(),
-                EReportFormat.valueOf(getReportFormatId().toUpperCase()),
+                getReportFormatId().toUpperCase(),
                 null,
                 revision,
                 true,
