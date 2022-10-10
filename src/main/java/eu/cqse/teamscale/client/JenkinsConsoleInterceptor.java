@@ -40,7 +40,7 @@ public class JenkinsConsoleInterceptor implements Interceptor {
         double requestTimeInMs = (requestEndTime - requestStartTime) / 1e6d;
 
         if(response.code() < 200 || response.code() > 399){
-            stream.println(TeamscaleUploadBuilder.ERROR + String.format("Response - %s in %.1fms", response.message(), requestTimeInMs));
+            stream.println(TeamscaleUploadBuilder.ERROR + String.format("Response with code %s and message: %s in %.1fms", response.code(), response.message(), requestTimeInMs));
         }else{
             stream.println(TeamscaleUploadBuilder.INFO + String.format("Response - %s in %.1fms", response.code(), requestTimeInMs ));
         }
