@@ -51,6 +51,7 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -189,6 +190,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 url,
                 credential.getUsername(),
                 credential.getPassword().getPlainText(),
+                Duration.ofSeconds(30),
+                Duration.ofSeconds(30),
                 new JenkinsConsoleInterceptor(listener.getLogger())
         );
 
