@@ -3,7 +3,9 @@ package eu.cqse.teamscale.jenkins.upload;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
 
@@ -19,23 +21,26 @@ public class TeamscaleUploadBuilderTest {
     private final String fileFormat = "**/*.simple";
     private final String reportFormatId = "SIMPLE";
 
-    @Test
-    public void testConfigRoundtrip() throws Exception {
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"a"})
+    public void testConfigRoundtrip(String repository) throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
-        project.getPublishersList().add(new TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId, ""));
+        project.getPublishersList().add(new TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, repository, uploadMessage, fileFormat, reportFormatId, ""));
         project = jenkins.configRoundtrip(project);
-        jenkins.assertEqualDataBoundBeans(new  TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId, ""), project.getPublishersList().get(0));
+        jenkins.assertEqualDataBoundBeans(new  TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, repository, uploadMessage, fileFormat, reportFormatId, ""), project.getPublishersList().get(0));
     }
 
-    @Test
-    public void testPipelineWithoutCredentials() throws Exception {
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"a"})
+    public void testPipelineWithoutCredentials(String repository) throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         project.setScm(new SingleFileSCM("test.simple", "RunExec.java\n8-10"));
-        TeamscaleUploadBuilder publisher = new TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId, "");
+        TeamscaleUploadBuilder publisher = new TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, repository, uploadMessage, fileFormat, reportFormatId, "");
         project.getPublishersList().add(publisher);
 
         FreeStyleBuild build = jenkins.buildAndAssertSuccess(project);
         jenkins.assertLogContains("credentials are null", build);
     }
-
 }

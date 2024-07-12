@@ -47,6 +47,7 @@ import org.kohsuke.stapler.QueryParameter;
 import retrofit2.Call;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
@@ -80,12 +81,10 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * For printing errors to jenkins console.
      */
     public static final String ERROR = "TS-ERROR: ";
-
     /**
      * For printing warnings to jenkins console.
      */
     public static final String WARNING = "TS-WARNING: ";
-
     /**
      * For printing info to jenkins console.
      */
@@ -94,6 +93,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private final String url;
     private final String teamscaleProject;
     private final String partition;
+    @Nullable
+    private final String repository;
     private final String uploadMessage;
     private final String includePattern;
     private final String reportFormatId;
@@ -108,16 +109,18 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param url              to save.
      * @param teamscaleProject to save.
      * @param partition        to save.
+     * @param repository       to save.
      * @param uploadMessage    to save.
      * @param includePattern   to save.
      * @param reportFormatId   to save.
      * @param revision         to save. Required in pipeline projects.
      */
     @DataBoundConstructor
-    public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String includePattern, String reportFormatId, String revision) {
+    public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, @Nullable String repository, String uploadMessage, String includePattern, String reportFormatId, String revision) {
         this.url = url;
         this.teamscaleProject = teamscaleProject;
         this.partition = partition;
+        this.repository = repository;
         this.uploadMessage = uploadMessage;
         this.includePattern = includePattern;
         this.reportFormatId = reportFormatId;
@@ -135,6 +138,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     public String getPartition() {
         return partition;
+    }
+
+    @Nullable
+    public String getRepository() {
+        return repository;
     }
 
     public String getUploadMessage() {
@@ -243,12 +251,12 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                     RequestBody.create(filenameAndReportContent.getValue(), MultipartBody.FORM)));
         }
 
-
         Call<ResponseBody> apiRequest = api.uploadExternalReports(
                 getTeamscaleProject(),
                 getReportFormatId().toUpperCase(),
                 null,
                 revision,
+                getRepository(),
                 true,
                 getPartition(),
                 getUploadMessage(),
