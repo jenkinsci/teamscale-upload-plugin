@@ -4,6 +4,7 @@ import eu.cqse.teamscale.jenkins.upload.TeamscaleUploadBuilder;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -40,7 +41,8 @@ public class JenkinsConsoleInterceptor implements Interceptor {
         double requestTimeInMs = (requestEndTime - requestStartTime) / 1e6d;
 
         if(response.code() < 200 || response.code() > 399){
-            stream.println(TeamscaleUploadBuilder.ERROR + String.format("Response - %s in %.1fms", response.message(), requestTimeInMs));
+            ResponseBody body = response.body();
+            stream.println(TeamscaleUploadBuilder.ERROR + String.format("Response - %s %s in %.1fms body:%n%s", response.code(), response.message(), requestTimeInMs, body != null ? body.string() : "Empty"));
         }else{
             stream.println(TeamscaleUploadBuilder.INFO + String.format("Response - %s in %.1fms", response.code(), requestTimeInMs ));
         }
