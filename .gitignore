@@ -1,14 +1,15 @@
-.idea/workspace.xml
-.idea/usage.statistics.xml
-.idea/tasks.xml
-.idea/libraries/*.xml
 target
-.classpath
-.settings
-.project
-.factorypath
-*.iml
-*.ipr
-*.iws
+
+# mvn hpi:run
 work
-teamscale_plugin_mappings.properties
+
+# IntelliJ IDEA project files
+*.iml
+*.iws
+*.ipr
+.idea
+
+# Eclipse project files
+.settings
+.classpath
+.project
