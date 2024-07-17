@@ -285,7 +285,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         public FormValidation doCheckUrl(@QueryParameter String value)
                 throws IOException, ServletException {
-            return getFormValidation(value);
+            HttpUrl url = HttpUrl.parse(value);
+            if (url == null) {
+                return FormValidation.error("Invalid URL");
+            }
+            return FormValidation.ok();
         }
 
         public FormValidation doCheckTeamscaleProject(@QueryParameter String value)
