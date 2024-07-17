@@ -35,16 +35,21 @@ public class TeamscaleUploadBuilderTest {
     @Test
     public void testConfigRoundtrip() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
-        project.getPublishersList().add(new TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, repository, uploadMessage, fileFormat, reportFormatId, ""));
+        TeamscaleUploadBuilder teamscaleUpload1 = new TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId, "");
+        teamscaleUpload1.setRepository(repository);
+        project.getPublishersList().add(teamscaleUpload1);
         project = jenkins.configRoundtrip(project);
-        jenkins.assertEqualDataBoundBeans(new  TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, repository, uploadMessage, fileFormat, reportFormatId, ""), project.getPublishersList().get(0));
+        TeamscaleUploadBuilder teamscaleUpload2 = new TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId, "");
+        teamscaleUpload2.setRepository(repository);
+        jenkins.assertEqualDataBoundBeans(teamscaleUpload2, project.getPublishersList().get(0));
     }
 
     @Test
     public void testPipelineWithoutCredentials() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         project.setScm(new SingleFileSCM("test.simple", "RunExec.java\n8-10"));
-        TeamscaleUploadBuilder publisher = new TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, repository, uploadMessage, fileFormat, reportFormatId, "");
+        TeamscaleUploadBuilder publisher = new TeamscaleUploadBuilder(url, "teamscale_id", teamscaleProject, partition, uploadMessage, fileFormat, reportFormatId, "");
+        publisher.setRepository(repository);
         project.getPublishersList().add(publisher);
 
         FreeStyleBuild build = jenkins.buildAndAssertSuccess(project);

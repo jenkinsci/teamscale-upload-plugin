@@ -10,6 +10,7 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.teamscale.client.EReportFormat;
 import com.teamscale.client.ITeamscaleService;
 import com.teamscale.client.TeamscaleServiceGenerator;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import eu.cqse.teamscale.client.JenkinsConsoleInterceptor;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -48,7 +49,6 @@ import org.kohsuke.stapler.QueryParameter;
 import retrofit2.Call;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
@@ -96,8 +96,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private final String url;
     private final String teamscaleProject;
     private final String partition;
-    @Nullable
-    private final String repository;
+    @CheckForNull
+    private String repository;
     private final String uploadMessage;
     private final String includePattern;
     private final String reportFormatId;
@@ -112,18 +112,16 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param url              to save.
      * @param teamscaleProject to save.
      * @param partition        to save.
-     * @param repository       to save.
      * @param uploadMessage    to save.
      * @param includePattern   to save.
      * @param reportFormatId   to save.
      * @param revision         to save. Required in pipeline projects.
      */
     @DataBoundConstructor
-    public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String repository, String uploadMessage, String includePattern, String reportFormatId, String revision) {
+    public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String includePattern, String reportFormatId, String revision) {
         this.url = url;
         this.teamscaleProject = teamscaleProject;
         this.partition = partition;
-        this.repository = Util.fixEmpty(repository);
         this.uploadMessage = uploadMessage;
         this.includePattern = includePattern;
         this.reportFormatId = reportFormatId;
@@ -143,7 +141,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return partition;
     }
 
-    @Nullable
+    @CheckForNull
     public String getRepository() {
         return repository;
     }
@@ -175,6 +173,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     @DataBoundSetter
     public void setRevision(String revision) {
         this.revision = revision;
+    }
+
+    @DataBoundSetter
+    public void setRepository(@CheckForNull String repository)  {
+        this.repository = Util.fixEmpty(repository);
     }
 
     @Override
