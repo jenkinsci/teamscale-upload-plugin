@@ -10,11 +10,13 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.teamscale.client.EReportFormat;
 import com.teamscale.client.ITeamscaleService;
 import com.teamscale.client.TeamscaleServiceGenerator;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import eu.cqse.teamscale.client.JenkinsConsoleInterceptor;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
 import hudson.model.Queue;
@@ -51,6 +53,7 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -93,6 +96,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private final String url;
     private final String teamscaleProject;
     private final String partition;
+    @CheckForNull
+    private String repository;
     private final String uploadMessage;
     private final String includePattern;
     private final String reportFormatId;
@@ -136,6 +141,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return partition;
     }
 
+    @CheckForNull
+    public String getRepository() {
+        return repository;
+    }
+
     public String getUploadMessage() {
         return uploadMessage;
     }
@@ -165,6 +175,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         this.revision = revision;
     }
 
+    @DataBoundSetter
+    public void setRepository(@CheckForNull String repository)  {
+        this.repository = Util.fixEmpty(repository);
+    }
+
     @Override
     public void perform(@Nonnull Run<?, ?> run, FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
 
@@ -189,6 +204,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 url,
                 credential.getUsername(),
                 credential.getPassword().getPlainText(),
+                Duration.ofSeconds(60),
+                Duration.ofSeconds(60),
                 new JenkinsConsoleInterceptor(listener.getLogger())
         );
 
@@ -246,6 +263,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 getReportFormatId().toUpperCase(),
                 null,
                 revision,
+                getRepository(),
                 true,
                 getPartition(),
                 getUploadMessage(),
@@ -267,7 +285,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         public FormValidation doCheckUrl(@QueryParameter String value)
                 throws IOException, ServletException {
-            return getFormValidation(value);
+            HttpUrl url = HttpUrl.parse(value);
+            if (url == null) {
+                return FormValidation.error("Invalid URL");
+            }
+            return FormValidation.ok();
         }
 
         public FormValidation doCheckTeamscaleProject(@QueryParameter String value)

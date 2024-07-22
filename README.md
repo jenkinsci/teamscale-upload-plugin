@@ -35,6 +35,17 @@ mvn test
 
 or the unit tests in your IDE.
 
+### Manual testing
+
+Start Teamscale, create a project with a Git connector.
+
+Start Jenkins with `mvn hpi:run -Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true -Dport=8081`.
+
+Go to http://localhost:8081/jenkins/, create new Item, choose Freestyle project.
+Then set Source Code Management to Git and choose the same repository as in Teamscale (you can also use a `file:///` URL) and add a Teamscale Upload Post-build Action.
+Set URL as http://localhost:8080/, add admin:admin user and configure the remaining settings.
+Click Build Now, then go to the Job and check the Console Output for the expected output. You should also see the report uploaded in Teamscale.
+
 ### Publishing
 
 File a [PR](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request) on master
