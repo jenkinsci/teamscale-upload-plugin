@@ -1,21 +1,20 @@
 package eu.cqse.teamscale.client;
 
 import eu.cqse.teamscale.jenkins.upload.TeamscaleUploadBuilder;
+import java.io.IOException;
+import java.io.PrintStream;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.io.PrintStream;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Class for forwarding HTTP-API-responses of Teamscale Uploader to the Jenkins Console.
  */
 public class JenkinsConsoleInterceptor implements Interceptor {
 
-    private PrintStream stream;
+    private final PrintStream stream;
 
     /**
      * Constructor for intercepting the console output.
@@ -25,7 +24,7 @@ public class JenkinsConsoleInterceptor implements Interceptor {
         this.stream = stream;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
@@ -40,16 +39,22 @@ public class JenkinsConsoleInterceptor implements Interceptor {
 
         double requestTimeInMs = (requestEndTime - requestStartTime) / 1e6d;
 
-        if(response.code() < 200 || response.code() > 399){
+        if (response.code() < 200 || response.code() > 399) {
             ResponseBody body = response.body();
-            stream.println(TeamscaleUploadBuilder.ERROR + String.format("Response - %s %s in %.1fms body:%n%s", response.code(), response.message(), requestTimeInMs, body != null ? body.string() : "Empty"));
-        }else{
-            stream.println(TeamscaleUploadBuilder.INFO + String.format("Response - %s in %.1fms", response.code(), requestTimeInMs ));
+            stream.println(TeamscaleUploadBuilder.ERROR
+                    + String.format(
+                            "Response - %s %s in %.1fms body:%n%s",
+                            response.code(),
+                            response.message(),
+                            requestTimeInMs,
+                            body != null ? body.string() : "Empty"));
+        } else {
+            stream.println(TeamscaleUploadBuilder.INFO
+                    + String.format("Response - %s in %.1fms", response.code(), requestTimeInMs));
         }
 
         return response.newBuilder().body(response.body()).build();
     }
-
 
     /**
      * Send intercepted request and forward IO-exceptions.

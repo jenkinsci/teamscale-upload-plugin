@@ -4,24 +4,18 @@ import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
-import com.teamscale.client.EReportFormat;
 import com.teamscale.client.ITeamscaleService;
 import com.teamscale.client.TeamscaleServiceGenerator;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import eu.cqse.teamscale.client.JenkinsConsoleInterceptor;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.AbstractProject;
-import hudson.model.Item;
+import hudson.model.*;
 import hudson.model.Queue;
-import hudson.model.Run;
-import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
 import hudson.remoting.VirtualChannel;
 import hudson.security.ACL;
@@ -30,6 +24,15 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import javax.servlet.ServletException;
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
@@ -41,26 +44,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.DirectoryScanner;
 import org.jenkinsci.Symbol;
-import org.jenkinsci.remoting.RoleChecker;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 import retrofit2.Call;
-
-import javax.annotation.Nonnull;
-import javax.servlet.ServletException;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * The Teamscale Jenkins plugin.
@@ -71,7 +62,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     /**
      * Matcher for populating the credentials dropdown
      */
-    private static final CredentialsMatcher MATCHER = CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
+    private static final CredentialsMatcher MATCHER =
+            CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
 
     /**
      * Api for uploading files to Teamscale.
@@ -84,11 +76,6 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     public static final String ERROR = "TS-ERROR: ";
 
     /**
-     * For printing warnings to jenkins console.
-     */
-    public static final String WARNING = "TS-WARNING: ";
-
-    /**
      * For printing info to jenkins console.
      */
     public static final String INFO = "TS-INFO: ";
@@ -96,8 +83,10 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private final String url;
     private final String teamscaleProject;
     private final String partition;
-    @CheckForNull
+
+    @Nullable
     private String repository;
+
     private final String uploadMessage;
     private final String includePattern;
     private final String reportFormatId;
@@ -105,6 +94,12 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private String revision;
 
     private String credentialsId;
+
+    @Nullable
+    private TeamscaleUploadPluginResult resultNoReports;
+
+    @Nullable
+    private TeamscaleUploadPluginResult resultOnUploadFailure;
 
     /**
      * Automatic data binding on save of the plugin configuration in jenkins.
@@ -117,8 +112,17 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param reportFormatId   to save.
      * @param revision         to save. Required in pipeline projects.
      */
+    @SuppressWarnings("unused")
     @DataBoundConstructor
-    public TeamscaleUploadBuilder(String url, String credentialsId, String teamscaleProject, String partition, String uploadMessage, String includePattern, String reportFormatId, String revision) {
+    public TeamscaleUploadBuilder(
+            String url,
+            String credentialsId,
+            String teamscaleProject,
+            String partition,
+            String uploadMessage,
+            String includePattern,
+            String reportFormatId,
+            String revision) {
         this.url = url;
         this.teamscaleProject = teamscaleProject;
         this.partition = partition;
@@ -129,59 +133,115 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         this.revision = revision;
     }
 
+    @SuppressWarnings("unused")
     public String getUrl() {
         return url;
     }
 
+    @SuppressWarnings("unused")
     public String getTeamscaleProject() {
         return teamscaleProject;
     }
 
+    @SuppressWarnings("unused")
     public String getPartition() {
         return partition;
     }
 
-    @CheckForNull
+    @SuppressWarnings("unused")
+    @Nullable
     public String getRepository() {
         return repository;
     }
 
+    @SuppressWarnings("unused")
     public String getUploadMessage() {
         return uploadMessage;
     }
 
+    @SuppressWarnings("unused")
     public String getIncludePattern() {
         return includePattern;
     }
 
+    @SuppressWarnings("unused")
     public String getReportFormatId() {
         return reportFormatId;
     }
 
+    @SuppressWarnings("unused")
     public String getCredentialsId() {
         return credentialsId;
     }
 
+    @SuppressWarnings("unused")
     public void setCredentialsId(String credentialsId) {
         this.credentialsId = credentialsId;
     }
 
+    @SuppressWarnings("unused")
     public String getRevision() {
         return revision;
     }
 
+    @SuppressWarnings("unused")
     @DataBoundSetter
     public void setRevision(String revision) {
         this.revision = revision;
     }
 
+    @SuppressWarnings("unused")
     @DataBoundSetter
-    public void setRepository(@CheckForNull String repository)  {
+    public void setRepository(@Nullable String repository) {
         this.repository = Util.fixEmpty(repository);
     }
 
+    @SuppressWarnings("unused")
+    @Nullable
+    public String getResultNoReports() {
+        if (resultNoReports == null) {
+            return null;
+        }
+        return resultNoReports.toString();
+    }
+
+    @SuppressWarnings("unused")
+    @DataBoundSetter
+    public void setResultNoReports(String resultOnNoReports) {
+        if (Util.fixEmpty(resultOnNoReports) == null) {
+            this.resultNoReports = null;
+        } else {
+            this.resultNoReports = TeamscaleUploadPluginResult.valueOf(resultOnNoReports);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @Nullable
+    public String getResultOnUploadFailure() {
+        if (resultOnUploadFailure == null) {
+            return null;
+        }
+        return resultOnUploadFailure.toString();
+    }
+
+    @SuppressWarnings("unused")
+    @DataBoundSetter
+    public void setResultOnUploadFailure(String resultOnUploadFailure) {
+        if (Util.fixEmpty(resultOnUploadFailure) == null) {
+            this.resultOnUploadFailure = null;
+        } else {
+            this.resultOnUploadFailure = TeamscaleUploadPluginResult.valueOf(resultOnUploadFailure);
+        }
+    }
+
     @Override
-    public void perform(@Nonnull Run<?, ?> run, FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+    public void perform(
+            @NonNull Run<?, ?> run,
+            @NonNull FilePath workspace,
+            @NonNull EnvVars env,
+            @NonNull Launcher launcher,
+            @NonNull TaskListener listener)
+            throws InterruptedException, IOException {
 
         StandardUsernamePasswordCredentials credential = CredentialsProvider.findCredentialById(
                 credentialsId,
@@ -191,11 +251,14 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
         if (credential == null) {
             listener.getLogger().println(ERROR + "credentials are null");
+            run.setResult(Result.FAILURE);
             return;
         }
 
         HttpUrl url = HttpUrl.parse(getUrl());
         if (url == null) {
+            listener.getLogger().println(ERROR + "Failed to parse URL");
+            run.setResult(Result.FAILURE);
             return;
         }
 
@@ -206,27 +269,66 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 credential.getPassword().getPlainText(),
                 Duration.ofSeconds(60),
                 Duration.ofSeconds(60),
-                new JenkinsConsoleInterceptor(listener.getLogger())
-        );
+                new JenkinsConsoleInterceptor(listener.getLogger()));
 
-
-        String rev = getScmRevision(run.getEnvironment(listener));
+        String rev = getScmRevision(env);
         listener.getLogger().println(INFO + "revision: " + revision);
         if (rev == null) {
-            listener.getLogger().println(ERROR + "Could not find any revision. Currently only GIT and SVN are supported.");
+            listener.getLogger()
+                    .println(ERROR + "Could not find any revision. Currently only GIT and SVN are supported.");
+            run.setResult(Result.FAILURE);
             return;
         }
 
-
-        Map<String, String> reports = workspace.act(new CoverageCollectingFileCallable(new String[]{getIncludePattern()}));
+        Map<String, String> reports =
+                workspace.act(new CoverageCollectingFileCallable(new String[] {getIncludePattern()}));
 
         if (reports.isEmpty()) {
-            listener.getLogger().println(INFO + "No files found to upload to Teamscale with pattern \"" + getIncludePattern() + "\"");
+            TeamscaleUploadPluginResult resultingResultNoReports = resultNoReports;
+            if (resultingResultNoReports == null) {
+                resultingResultNoReports =
+                        TeamscaleUploadPluginConfiguration.get().getResultNoReportsEnum();
+            }
+            String level = ERROR;
+            switch (resultingResultNoReports) {
+                case IGNORE:
+                    level = INFO;
+                    break;
+                case UNSTABLE:
+                    run.setResult(Result.UNSTABLE);
+                    break;
+                case FAILURE:
+                    run.setResult(Result.FAILURE);
+                    break;
+            }
+            listener.getLogger()
+                    .println(level + "No files found to upload to Teamscale with pattern \"" + getIncludePattern()
+                            + "\"");
             return;
         }
-        uploadReports(reports, rev);
+        try {
+            uploadReports(reports, rev);
+        } catch (IOException e) {
+            TeamscaleUploadPluginResult resultingResultOnUploadFailure = resultOnUploadFailure;
+            if (resultingResultOnUploadFailure == null) {
+                resultingResultOnUploadFailure =
+                        TeamscaleUploadPluginConfiguration.get().getResultOnUploadFailureEnum();
+            }
+            String level = ERROR;
+            switch (resultingResultOnUploadFailure) {
+                case IGNORE:
+                    level = INFO;
+                    break;
+                case UNSTABLE:
+                    run.setResult(Result.UNSTABLE);
+                    break;
+                case FAILURE:
+                    run.setResult(Result.FAILURE);
+                    break;
+            }
+            listener.getLogger().println(level + "Failed to upload reports to Teamscale");
+        }
     }
-
 
     /**
      * Retrieves the SCM revision.
@@ -250,13 +352,14 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return envVars.get("SVN_REVISION");
     }
 
-    private void uploadReports(Map<String, String> reports, String revision) {
+    private void uploadReports(Map<String, String> reports, String revision) throws IOException {
         List<MultipartBody.Part> parts = new ArrayList<>();
         for (Map.Entry<String, String> filenameAndReportContent : reports.entrySet()) {
-            parts.add(MultipartBody.Part.createFormData("report", filenameAndReportContent.getKey(),
+            parts.add(MultipartBody.Part.createFormData(
+                    "report",
+                    filenameAndReportContent.getKey(),
                     RequestBody.create(filenameAndReportContent.getValue(), MultipartBody.FORM)));
         }
-
 
         Call<ResponseBody> apiRequest = api.uploadExternalReports(
                 getTeamscaleProject(),
@@ -267,13 +370,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 true,
                 getPartition(),
                 getUploadMessage(),
-                parts
-        );
-        try {
-            apiRequest.execute();
-        } catch (IOException e) {
-            // Do nothing
-        }
+                parts);
+        apiRequest.execute();
     }
 
     /**
@@ -281,10 +379,14 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      */
     @Symbol("teamscale")
     @Extension
+    @SuppressWarnings("unused")
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
-        public FormValidation doCheckUrl(@QueryParameter String value)
+        @POST
+        @SuppressWarnings("unused")
+        public FormValidation doCheckUrl(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
+            item.checkPermission(Item.CONFIGURE);
             HttpUrl url = HttpUrl.parse(value);
             if (url == null) {
                 return FormValidation.error("Invalid URL");
@@ -292,79 +394,84 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return FormValidation.ok();
         }
 
+        @SuppressWarnings("unused")
         public FormValidation doCheckTeamscaleProject(@QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
         }
 
-        public FormValidation doCheckPartition(@QueryParameter String value)
+        @POST
+        @SuppressWarnings("unused")
+        public FormValidation doCheckPartition(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
+            item.checkPermission(Item.CONFIGURE);
             return getFormValidation(value);
         }
 
-        public FormValidation doCheckUploadMessage(@QueryParameter String value)
+        @POST
+        @SuppressWarnings("unused")
+        public FormValidation doCheckUploadMessage(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
+            item.checkPermission(Item.CONFIGURE);
             return getFormValidation(value);
         }
 
-        public FormValidation doCheckIncludePattern(@QueryParameter String value)
+        @POST
+        @SuppressWarnings("unused")
+        public FormValidation doCheckIncludePattern(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
+            item.checkPermission(Item.CONFIGURE);
             return getFormValidation(value);
         }
 
-        public FormValidation doCheckReportFormatId(@QueryParameter String value)
+        @POST
+        @SuppressWarnings("unused")
+        public FormValidation doCheckReportFormatId(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
+            item.checkPermission(Item.CONFIGURE);
             return getFormValidation(value);
         }
 
         /**
          * Populates the dropdown for the credentials matching {@literal MATCHER}
          *
-         * @param project       to look in.
+         * @param item       to look in.
          * @param url           jenkins server url
          * @param credentialsId current populated id
          * @return list of credentials
          */
+        @SuppressWarnings("unused")
         public ListBoxModel doFillCredentialsIdItems(
-                @AncestorInPath Item project,
-                @QueryParameter String url,
-                @QueryParameter String credentialsId
-        ) {
+                @AncestorInPath Item item, @QueryParameter String url, @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
-            if (project == null) {
+            if (item == null) {
                 if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                     return result.includeCurrentValue(credentialsId);
                 }
             } else {
-                if (!project.hasPermission(Item.EXTENDED_READ)
-                        && !project.hasPermission(CredentialsProvider.USE_ITEM)) {
+                if (!item.hasPermission(Item.EXTENDED_READ) && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return result.includeCurrentValue(credentialsId);
                 }
             }
 
-            return result
-                    .includeMatchingAs(
-                            project instanceof Queue.Task ?
-                                    Tasks.getAuthenticationOf((Queue.Task) project) : ACL.SYSTEM,
-                            project,
+            return result.includeMatchingAs(
+                            item instanceof Queue.Task ? Tasks.getAuthenticationOf2((Queue.Task) item) : ACL.SYSTEM2,
+                            item,
                             StandardUsernamePasswordCredentials.class,
                             URIRequirementBuilder.fromUri(url).build(),
                             MATCHER)
                     .includeCurrentValue(credentialsId);
         }
 
+        @SuppressWarnings("unused")
         public FormValidation doCheckCredentialsId(
-                @AncestorInPath Item item,
-                @QueryParameter String url,
-                @QueryParameter String value
-        ) {
+                @AncestorInPath Item item, @QueryParameter String url, @QueryParameter String value) {
             if (item == null) {
                 if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                     return FormValidation.ok();
                 }
             } else {
-                if (!item.hasPermission(Item.EXTENDED_READ)
-                        && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+                if (!item.hasPermission(Item.EXTENDED_READ) && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return FormValidation.ok();
                 }
             }
@@ -374,14 +481,13 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             if (StringUtils.isBlank(value)) {
                 return FormValidation.error("Upload will fail without credentials");
             }
-            if (CredentialsProvider.listCredentials(
-                    StandardUsernameCredentials.class,
-                    item,
-                    item instanceof Queue.Task ?
-                            Tasks.getAuthenticationOf((Queue.Task) item) : ACL.SYSTEM,
-                    URIRequirementBuilder.fromUri(url).build(),
-                    CredentialsMatchers.withId(value)
-            ).isEmpty()) {
+            if (CredentialsProvider.listCredentialsInItem(
+                            StandardUsernamePasswordCredentials.class,
+                            item,
+                            item instanceof Queue.Task ? Tasks.getAuthenticationOf2((Queue.Task) item) : ACL.SYSTEM2,
+                            URIRequirementBuilder.fromUri(url).build(),
+                            CredentialsMatchers.withId(value))
+                    .isEmpty()) {
                 return FormValidation.error("Cannot find currently selected credentials");
             }
             return FormValidation.ok();
@@ -394,7 +500,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
          * @return ok or not okay.
          */
         private FormValidation getFormValidation(@QueryParameter String value) {
-            if (value.length() == 0) {
+            if (value.isEmpty()) {
                 return FormValidation.error(Messages.TeamscaleBuilder_DescriptorImpl_errors_requiredField());
             }
             return FormValidation.ok();
@@ -405,12 +511,61 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return true;
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.TeamscaleBuilder_DescriptorImpl_DisplayName();
         }
 
+        @POST
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillResultNoReportsItems(
+                @AncestorInPath Item item, @QueryParameter String resultNoReports) {
+            item.checkPermission(Item.CONFIGURE);
+            ListBoxModel items = new ListBoxModel();
+            items.add("inherit", "");
+            items.addAll(Arrays.stream(TeamscaleUploadPluginResult.values())
+                    .map(e -> new ListBoxModel.Option(e.toString()))
+                    .collect(Collectors.toList()));
+            return items;
+        }
+
+        @POST
+        @SuppressWarnings("unused")
+        public FormValidation doCheckResultNoReports(@AncestorInPath Item item, @QueryParameter String value) {
+            item.checkPermission(Item.CONFIGURE);
+            if (Util.fixEmpty(value) != null
+                    && Arrays.stream(TeamscaleUploadPluginResult.values())
+                            .noneMatch(a -> a.name().equals(value))) {
+                return FormValidation.error("Please specify a correct result when no reports.");
+            }
+            return FormValidation.ok();
+        }
+
+        @POST
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillResultOnUploadFailureItems(
+                @AncestorInPath Item item, @QueryParameter String resultOnUploadFailure) {
+            item.checkPermission(Item.CONFIGURE);
+            ListBoxModel items = new ListBoxModel();
+            items.add("inherit", "");
+            items.addAll(Arrays.stream(TeamscaleUploadPluginResult.values())
+                    .map(e -> new ListBoxModel.Option(e.toString()))
+                    .collect(Collectors.toList()));
+            return items;
+        }
+
+        @POST
+        @SuppressWarnings("unused")
+        public FormValidation doCheckResultOnUploadFailure(@AncestorInPath Item item, @QueryParameter String value) {
+            item.checkPermission(Item.CONFIGURE);
+            if (Util.fixEmpty(value) != null
+                    && Arrays.stream(TeamscaleUploadPluginResult.values())
+                            .noneMatch(a -> a.name().equals(value))) {
+                return FormValidation.error("Please specify a correct result on upload failure.");
+            }
+            return FormValidation.ok();
+        }
     }
 
     private static class CoverageCollectingFileCallable extends MasterToSlaveFileCallable<Map<String, String>> {
@@ -423,14 +578,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             this.includes = includes;
         }
 
-
         @Override
-        public void checkRoles(RoleChecker roleChecker) throws SecurityException {
-
-        }
-
-        @Override
-        public Map<String, String> invoke(File directory, VirtualChannel virtualChannel) throws IOException, InterruptedException {
+        public Map<String, String> invoke(File directory, VirtualChannel virtualChannel)
+                throws IOException, InterruptedException {
             DirectoryScanner directoryScanner = new DirectoryScanner();
             directoryScanner.setBasedir(directory);
             directoryScanner.setIncludes(includes);
