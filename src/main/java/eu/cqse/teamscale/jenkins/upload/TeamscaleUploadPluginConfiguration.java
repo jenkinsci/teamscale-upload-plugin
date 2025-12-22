@@ -29,10 +29,10 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     public TeamscaleUploadPluginConfiguration() {
         resultNoReports = TeamscaleUploadPluginResult.FAILURE;
         resultOnUploadFailure = TeamscaleUploadPluginResult.UNSTABLE;
-        load(); // probably this doesnt work
+        load();
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public String getResultOnUploadFailure() {
         return resultOnUploadFailure.toString();
     }
@@ -41,7 +41,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
         return resultOnUploadFailure;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     @DataBoundSetter
     public void setResultOnUploadFailure(String resultOnUploadFailure) {
         this.resultOnUploadFailure = TeamscaleUploadPluginResult.valueOf(resultOnUploadFailure);
@@ -49,7 +49,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     }
 
     @POST
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public ListBoxModel doFillResultOnUploadFailureItems() {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         return new ListBoxModel(Arrays.stream(TeamscaleUploadPluginResult.values())
@@ -58,7 +58,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     }
 
     @POST
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public FormValidation doCheckResultOnUploadFailure(@QueryParameter String value) {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         if (Arrays.stream(TeamscaleUploadPluginResult.values())
@@ -68,7 +68,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
         return FormValidation.ok();
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public String getResultNoReports() {
         return resultNoReports.toString();
     }
@@ -77,7 +77,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
         return resultNoReports;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     @DataBoundSetter
     public void setResultNoReports(String resultOnNoReports) {
         this.resultNoReports = TeamscaleUploadPluginResult.valueOf(resultOnNoReports);
@@ -85,7 +85,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     }
 
     @POST
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public ListBoxModel doFillResultNoReportsItems() {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         return new ListBoxModel(Arrays.stream(TeamscaleUploadPluginResult.values())
@@ -94,7 +94,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     }
 
     @POST
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public FormValidation doCheckResultNoReports(@QueryParameter String value) {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         if (Arrays.stream(TeamscaleUploadPluginResult.values())

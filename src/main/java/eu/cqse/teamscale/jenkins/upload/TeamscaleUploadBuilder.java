@@ -95,9 +95,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
 
     private String credentialsId;
 
+    /** {@code null} means inherit from global configuration. */
     @Nullable
     private TeamscaleUploadPluginResult resultNoReports;
 
+    /** {@code null} means inherit from global configuration. */
     @Nullable
     private TeamscaleUploadPluginResult resultOnUploadFailure;
 
@@ -112,7 +114,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * @param reportFormatId   to save.
      * @param revision         to save. Required in pipeline projects.
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     @DataBoundConstructor
     public TeamscaleUploadBuilder(
             String url,
@@ -133,70 +135,70 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         this.revision = revision;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public String getUrl() {
         return url;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public String getTeamscaleProject() {
         return teamscaleProject;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public String getPartition() {
         return partition;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     @Nullable
     public String getRepository() {
         return repository;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public String getUploadMessage() {
         return uploadMessage;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public String getIncludePattern() {
         return includePattern;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public String getReportFormatId() {
         return reportFormatId;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public String getCredentialsId() {
         return credentialsId;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public void setCredentialsId(String credentialsId) {
         this.credentialsId = credentialsId;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public String getRevision() {
         return revision;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     @DataBoundSetter
     public void setRevision(String revision) {
         this.revision = revision;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     @DataBoundSetter
     public void setRepository(@Nullable String repository) {
         this.repository = Util.fixEmpty(repository);
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     @Nullable
     public String getResultNoReports() {
         if (resultNoReports == null) {
@@ -205,7 +207,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return resultNoReports.toString();
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     @DataBoundSetter
     public void setResultNoReports(String resultOnNoReports) {
         if (Util.fixEmpty(resultOnNoReports) == null) {
@@ -215,7 +217,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     @Nullable
     public String getResultOnUploadFailure() {
         if (resultOnUploadFailure == null) {
@@ -224,7 +226,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return resultOnUploadFailure.toString();
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     @DataBoundSetter
     public void setResultOnUploadFailure(String resultOnUploadFailure) {
         if (Util.fixEmpty(resultOnUploadFailure) == null) {
@@ -286,6 +288,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         if (reports.isEmpty()) {
             TeamscaleUploadPluginResult resultingResultNoReports = resultNoReports;
             if (resultingResultNoReports == null) {
+                // If the job is set to inherit, use global configuration
                 resultingResultNoReports =
                         TeamscaleUploadPluginConfiguration.get().getResultNoReportsEnum();
             }
@@ -311,6 +314,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         } catch (IOException e) {
             TeamscaleUploadPluginResult resultingResultOnUploadFailure = resultOnUploadFailure;
             if (resultingResultOnUploadFailure == null) {
+                // If the job is set to inherit, use global configuration
                 resultingResultOnUploadFailure =
                         TeamscaleUploadPluginConfiguration.get().getResultOnUploadFailureEnum();
             }
@@ -379,11 +383,11 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      */
     @Symbol("teamscale")
     @Extension
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // used by stapler web framework
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         @POST
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public FormValidation doCheckUrl(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             item.checkPermission(Item.CONFIGURE);
@@ -394,14 +398,14 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return FormValidation.ok();
         }
 
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public FormValidation doCheckTeamscaleProject(@QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
         }
 
         @POST
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public FormValidation doCheckPartition(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             item.checkPermission(Item.CONFIGURE);
@@ -409,7 +413,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public FormValidation doCheckUploadMessage(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             item.checkPermission(Item.CONFIGURE);
@@ -417,7 +421,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public FormValidation doCheckIncludePattern(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             item.checkPermission(Item.CONFIGURE);
@@ -425,7 +429,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public FormValidation doCheckReportFormatId(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             item.checkPermission(Item.CONFIGURE);
@@ -440,7 +444,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
          * @param credentialsId current populated id
          * @return list of credentials
          */
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public ListBoxModel doFillCredentialsIdItems(
                 @AncestorInPath Item item, @QueryParameter String url, @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
@@ -463,7 +467,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                     .includeCurrentValue(credentialsId);
         }
 
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public FormValidation doCheckCredentialsId(
                 @AncestorInPath Item item, @QueryParameter String url, @QueryParameter String value) {
             if (item == null) {
@@ -518,7 +522,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public ListBoxModel doFillResultNoReportsItems(
                 @AncestorInPath Item item, @QueryParameter String resultNoReports) {
             item.checkPermission(Item.CONFIGURE);
@@ -531,7 +535,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public FormValidation doCheckResultNoReports(@AncestorInPath Item item, @QueryParameter String value) {
             item.checkPermission(Item.CONFIGURE);
             if (Util.fixEmpty(value) != null
@@ -543,7 +547,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public ListBoxModel doFillResultOnUploadFailureItems(
                 @AncestorInPath Item item, @QueryParameter String resultOnUploadFailure) {
             item.checkPermission(Item.CONFIGURE);
@@ -556,7 +560,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused")
+        @SuppressWarnings("unused") // used by stapler web framework
         public FormValidation doCheckResultOnUploadFailure(@AncestorInPath Item item, @QueryParameter String value) {
             item.checkPermission(Item.CONFIGURE);
             if (Util.fixEmpty(value) != null
