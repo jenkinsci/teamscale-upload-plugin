@@ -399,8 +399,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @SuppressWarnings("unused") // used by stapler web framework
-        public FormValidation doCheckTeamscaleProject(@QueryParameter String value)
+        public FormValidation doCheckTeamscaleProject(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
+            item.checkPermission(Item.CONFIGURE);
             return getFormValidation(value);
         }
 
