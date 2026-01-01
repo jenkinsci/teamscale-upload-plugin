@@ -49,18 +49,16 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     }
 
     @POST
-    @SuppressWarnings("unused") // used by stapler web framework
+    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
     public ListBoxModel doFillResultOnUploadFailureItems() {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         return new ListBoxModel(Arrays.stream(TeamscaleUploadPluginResult.values())
                 .map(e -> new ListBoxModel.Option(e.toString()))
                 .collect(Collectors.toList()));
     }
 
     @POST
-    @SuppressWarnings("unused") // used by stapler web framework
+    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
     public FormValidation doCheckResultOnUploadFailure(@QueryParameter String value) {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         if (Arrays.stream(TeamscaleUploadPluginResult.values())
                 .noneMatch(a -> a.name().equals(value))) {
             return FormValidation.error("Please specify a correct result on upload failure.");
@@ -85,18 +83,16 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     }
 
     @POST
-    @SuppressWarnings("unused") // used by stapler web framework
+    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
     public ListBoxModel doFillResultNoReportsItems() {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         return new ListBoxModel(Arrays.stream(TeamscaleUploadPluginResult.values())
                 .map(e -> new ListBoxModel.Option(e.toString()))
                 .collect(Collectors.toList()));
     }
 
     @POST
-    @SuppressWarnings("unused") // used by stapler web framework
+    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
     public FormValidation doCheckResultNoReports(@QueryParameter String value) {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         if (Arrays.stream(TeamscaleUploadPluginResult.values())
                 .noneMatch(a -> a.name().equals(value))) {
             return FormValidation.error("Please specify a correct result when no reports.");

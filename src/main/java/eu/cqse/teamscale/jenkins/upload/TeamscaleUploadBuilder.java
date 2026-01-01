@@ -388,10 +388,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         @POST
-        @SuppressWarnings("unused") // used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
         public FormValidation doCheckUrl(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
-            item.checkPermission(Item.CONFIGURE);
             HttpUrl url = HttpUrl.parse(value);
             if (url == null) {
                 return FormValidation.error("Invalid URL");
@@ -400,42 +399,37 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused") // used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
         public FormValidation doCheckTeamscaleProject(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
-            item.checkPermission(Item.CONFIGURE);
             return getFormValidation(value);
         }
 
         @POST
-        @SuppressWarnings("unused") // used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
         public FormValidation doCheckPartition(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
-            item.checkPermission(Item.CONFIGURE);
             return getFormValidation(value);
         }
 
         @POST
-        @SuppressWarnings("unused") // used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
         public FormValidation doCheckUploadMessage(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
-            item.checkPermission(Item.CONFIGURE);
             return getFormValidation(value);
         }
 
         @POST
-        @SuppressWarnings("unused") // used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
         public FormValidation doCheckIncludePattern(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
-            item.checkPermission(Item.CONFIGURE);
             return getFormValidation(value);
         }
 
         @POST
-        @SuppressWarnings("unused") // used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
         public FormValidation doCheckReportFormatId(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
-            item.checkPermission(Item.CONFIGURE);
             return getFormValidation(value);
         }
 
@@ -525,10 +519,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused") // used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
         public ListBoxModel doFillResultNoReportsItems(
                 @AncestorInPath Item item, @QueryParameter String resultNoReports) {
-            item.checkPermission(Item.CONFIGURE);
             ListBoxModel items = new ListBoxModel();
             items.add("inherit", "");
             items.addAll(Arrays.stream(TeamscaleUploadPluginResult.values())
@@ -538,9 +531,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused") // used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
         public FormValidation doCheckResultNoReports(@AncestorInPath Item item, @QueryParameter String value) {
-            item.checkPermission(Item.CONFIGURE);
             if (Util.fixEmpty(value) != null
                     && Arrays.stream(TeamscaleUploadPluginResult.values())
                             .noneMatch(a -> a.name().equals(value))) {
@@ -550,10 +542,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused") // used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
         public ListBoxModel doFillResultOnUploadFailureItems(
                 @AncestorInPath Item item, @QueryParameter String resultOnUploadFailure) {
-            item.checkPermission(Item.CONFIGURE);
             ListBoxModel items = new ListBoxModel();
             items.add("inherit", "");
             items.addAll(Arrays.stream(TeamscaleUploadPluginResult.values())
@@ -563,9 +554,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings("unused") // used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
         public FormValidation doCheckResultOnUploadFailure(@AncestorInPath Item item, @QueryParameter String value) {
-            item.checkPermission(Item.CONFIGURE);
             if (Util.fixEmpty(value) != null
                     && Arrays.stream(TeamscaleUploadPluginResult.values())
                             .noneMatch(a -> a.name().equals(value))) {
