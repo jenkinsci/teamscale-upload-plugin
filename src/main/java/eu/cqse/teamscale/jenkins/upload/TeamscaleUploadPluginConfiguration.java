@@ -7,7 +7,6 @@ import hudson.util.ListBoxModel;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import jenkins.model.GlobalConfiguration;
-import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
