@@ -48,7 +48,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     }
 
     @POST
-    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
+    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
     public ListBoxModel doFillResultOnUploadFailureItems() {
         return new ListBoxModel(Arrays.stream(TeamscaleUploadPluginResult.values())
                 .map(e -> new ListBoxModel.Option(e.toString()))
@@ -56,7 +56,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     }
 
     @POST
-    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
+    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
     public FormValidation doCheckResultOnUploadFailure(@QueryParameter String value) {
         if (Arrays.stream(TeamscaleUploadPluginResult.values())
                 .noneMatch(a -> a.name().equals(value))) {
@@ -82,7 +82,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     }
 
     @POST
-    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
+    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
     public ListBoxModel doFillResultNoReportsItems() {
         return new ListBoxModel(Arrays.stream(TeamscaleUploadPluginResult.values())
                 .map(e -> new ListBoxModel.Option(e.toString()))
@@ -90,7 +90,7 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     }
 
     @POST
-    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // used by stapler web framework
+    @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
     public FormValidation doCheckResultNoReports(@QueryParameter String value) {
         if (Arrays.stream(TeamscaleUploadPluginResult.values())
                 .noneMatch(a -> a.name().equals(value))) {
