@@ -91,6 +91,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     private final String includePattern;
     private final String reportFormatId;
 
+    @Nullable
     private String revision;
 
     private String credentialsId;
@@ -124,7 +125,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             String uploadMessage,
             String includePattern,
             String reportFormatId,
-            String revision) {
+            @Nullable String revision) {
         this.url = url;
         this.teamscaleProject = teamscaleProject;
         this.partition = partition;
@@ -132,7 +133,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         this.includePattern = includePattern;
         this.reportFormatId = reportFormatId;
         this.credentialsId = credentialsId;
-        this.revision = revision;
+        this.revision = Util.fixEmpty(revision);
     }
 
     @SuppressWarnings("unused") // used by stapler web framework
@@ -182,14 +183,14 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     }
 
     @SuppressWarnings("unused") // used by stapler web framework
-    public String getRevision() {
+    public @Nullable String getRevision() {
         return revision;
     }
 
     @SuppressWarnings("unused") // used by stapler web framework
     @DataBoundSetter
-    public void setRevision(String revision) {
-        this.revision = revision;
+    public void setRevision(@Nullable String revision) {
+        this.revision = Util.fixEmpty(revision);
     }
 
     @SuppressWarnings("unused") // used by stapler web framework
@@ -274,7 +275,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 new JenkinsConsoleInterceptor(listener.getLogger()));
 
         String rev = getScmRevision(env);
-        listener.getLogger().println(INFO + "revision: " + revision);
+        listener.getLogger().println(INFO + "revision: " + rev);
         if (rev == null) {
             listener.getLogger()
                     .println(ERROR + "Could not find any revision. Currently only GIT and SVN are supported.");
