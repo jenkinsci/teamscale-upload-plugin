@@ -110,9 +110,9 @@ class TeamscaleUploadBuilderTest {
             publisher.setCredentialsId("username-pass");
             project.getPublishersList().add(publisher);
 
-            FreeStyleBuild build = jenkins.buildAndAssertStatus(Result.UNSTABLE, project);
+            FreeStyleBuild build = jenkins.buildAndAssertStatus(Result.SUCCESS, project);
 
-            jenkins.assertLogContains("TS-ERROR: Failed to upload reports to Teamscale", build);
+            jenkins.assertLogContains("TS-INFO: Failed to upload reports to Teamscale", build);
         });
     }
 }

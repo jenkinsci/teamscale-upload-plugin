@@ -27,8 +27,8 @@ public class TeamscaleUploadPluginConfiguration extends GlobalConfiguration {
     private TeamscaleUploadPluginResult resultOnUploadFailure;
 
     public TeamscaleUploadPluginConfiguration() {
-        resultNoReports = TeamscaleUploadPluginResult.FAILURE;
-        resultOnUploadFailure = TeamscaleUploadPluginResult.UNSTABLE;
+        resultNoReports = TeamscaleUploadPluginResult.IGNORE;
+        resultOnUploadFailure = TeamscaleUploadPluginResult.IGNORE;
         load();
     }
 

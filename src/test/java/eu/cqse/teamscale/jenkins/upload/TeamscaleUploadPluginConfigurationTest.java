@@ -26,11 +26,9 @@ class TeamscaleUploadPluginConfigurationTest {
     @Test
     void uiAndStorage() throws Throwable {
         extension.then(jenkins -> {
-            assertEquals("FAILURE", TeamscaleUploadPluginConfiguration.get().getResultNoReports(), "not set initially");
+            assertEquals("IGNORE", TeamscaleUploadPluginConfiguration.get().getResultNoReports(), "not set initially");
             assertEquals(
-                    "UNSTABLE",
-                    TeamscaleUploadPluginConfiguration.get().getResultOnUploadFailure(),
-                    "not set initially");
+                    "IGNORE", TeamscaleUploadPluginConfiguration.get().getResultOnUploadFailure(), "not set initially");
             try (JenkinsRule.WebClient client = jenkins.createWebClient()) {
                 HtmlForm config = client.goTo("configure").getFormByName("config");
                 HtmlSelect textbox = config.getSelectByName("_.resultNoReports");
