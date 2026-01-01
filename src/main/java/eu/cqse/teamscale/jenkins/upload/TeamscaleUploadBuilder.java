@@ -388,7 +388,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         @POST
-        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects
         public FormValidation doCheckUrl(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             HttpUrl url = HttpUrl.parse(value);
@@ -399,35 +399,35 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects
         public FormValidation doCheckTeamscaleProject(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
         }
 
         @POST
-        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects
         public FormValidation doCheckPartition(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
         }
 
         @POST
-        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects
         public FormValidation doCheckUploadMessage(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
         }
 
         @POST
-        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects
         public FormValidation doCheckIncludePattern(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
         }
 
         @POST
-        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects
         public FormValidation doCheckReportFormatId(@AncestorInPath Item item, @QueryParameter String value)
                 throws IOException, ServletException {
             return getFormValidation(value);
@@ -519,7 +519,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects
         public ListBoxModel doFillResultNoReportsItems(
                 @AncestorInPath Item item, @QueryParameter String resultNoReports) {
             ListBoxModel items = new ListBoxModel();
@@ -531,7 +531,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects
         public FormValidation doCheckResultNoReports(@AncestorInPath Item item, @QueryParameter String value) {
             if (Util.fixEmpty(value) != null
                     && Arrays.stream(TeamscaleUploadPluginResult.values())
@@ -542,7 +542,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects
         public ListBoxModel doFillResultOnUploadFailureItems(
                 @AncestorInPath Item item, @QueryParameter String resultOnUploadFailure) {
             ListBoxModel items = new ListBoxModel();
@@ -554,7 +554,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         }
 
         @POST
-        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects, used by stapler web framework
+        @SuppressWarnings({"lgtm[jenkins/no-permission-check]", "unused"}) // secure because no side effects
         public FormValidation doCheckResultOnUploadFailure(@AncestorInPath Item item, @QueryParameter String value) {
             if (Util.fixEmpty(value) != null
                     && Arrays.stream(TeamscaleUploadPluginResult.values())
