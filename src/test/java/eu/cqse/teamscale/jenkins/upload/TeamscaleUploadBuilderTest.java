@@ -108,11 +108,46 @@ class TeamscaleUploadBuilderTest {
                     "wonderfulPassword");
             SystemCredentialsProvider.getInstance().getCredentials().add(usernamePasswordCredentials);
             publisher.setCredentialsId("username-pass");
+            publisher.setResultOnUploadFailure("FAILURE");
             project.getPublishersList().add(publisher);
 
-            FreeStyleBuild build = jenkins.buildAndAssertStatus(Result.SUCCESS, project);
+            FreeStyleBuild build = jenkins.buildAndAssertStatus(Result.FAILURE, project);
 
-            jenkins.assertLogContains("TS-INFO: Failed to upload reports to Teamscale", build);
+            jenkins.assertLogContains(
+                    "TS-ERROR: Failed to upload reports to Teamscale: Failed to connect to localhost/127.0.0.1:8100",
+                    build);
+        });
+    }
+
+    @Test
+    public void testPipelineWithUnsuccessfulHttpResponse() throws Throwable {
+        extension.then(jenkins -> {
+            FreeStyleProject project = jenkins.createFreeStyleProject();
+            project.setScm(new SingleFileSCM("test.simple", "RunExec.java\n8-10"));
+            TeamscaleUploadBuilder publisher = new TeamscaleUploadBuilder(
+                    jenkins.getURL().toString(), // use a responsive http server that will fail with an http status code
+                    "teamscale_id",
+                    Constants.teamscaleProject,
+                    Constants.partition,
+                    Constants.uploadMessage,
+                    Constants.fileFormat,
+                    Constants.reportFormatId,
+                    "1337");
+            publisher.setRepository("repository");
+            UsernamePasswordCredentialsImpl usernamePasswordCredentials = new UsernamePasswordCredentialsImpl(
+                    CredentialsScope.GLOBAL,
+                    "username-pass",
+                    "Username / Password credential for testing",
+                    "my-user",
+                    "wonderfulPassword");
+            SystemCredentialsProvider.getInstance().getCredentials().add(usernamePasswordCredentials);
+            publisher.setCredentialsId("username-pass");
+            publisher.setResultOnUploadFailure("FAILURE");
+            project.getPublishersList().add(publisher);
+
+            FreeStyleBuild build = jenkins.buildAndAssertStatus(Result.FAILURE, project);
+
+            jenkins.assertLogContains("TS-ERROR: Response - 403 Forbidden", build);
         });
     }
 }

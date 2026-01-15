@@ -8,7 +8,6 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.teamscale.client.ITeamscaleService;
 import com.teamscale.client.TeamscaleServiceGenerator;
-import eu.cqse.teamscale.client.JenkinsConsoleInterceptor;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -26,6 +25,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
@@ -36,10 +36,7 @@ import javax.servlet.ServletException;
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
-import okhttp3.HttpUrl;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.DirectoryScanner;
@@ -52,6 +49,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 import retrofit2.Call;
+import retrofit2.Response;
 
 /**
  * The Teamscale Jenkins plugin.
@@ -271,8 +269,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 credential.getUsername(),
                 credential.getPassword().getPlainText(),
                 Duration.ofSeconds(60),
-                Duration.ofSeconds(60),
-                new JenkinsConsoleInterceptor(listener.getLogger()));
+                Duration.ofSeconds(60));
 
         String rev = getScmRevision(env);
         listener.getLogger().println(INFO + "revision: " + rev);
@@ -293,10 +290,10 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 resultingResultNoReports =
                         TeamscaleUploadPluginConfiguration.get().getResultNoReportsEnum();
             }
-            String level = ERROR;
+            String logLevel = ERROR;
             switch (resultingResultNoReports) {
                 case IGNORE:
-                    level = INFO;
+                    logLevel = INFO;
                     break;
                 case UNSTABLE:
                     run.setResult(Result.UNSTABLE);
@@ -306,23 +303,25 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                     break;
             }
             listener.getLogger()
-                    .println(level + "No files found to upload to Teamscale with pattern \"" + getIncludePattern()
+                    .println(logLevel + "No files found to upload to Teamscale with pattern \"" + getIncludePattern()
                             + "\"");
             return;
         }
-        try {
-            uploadReports(reports, rev);
-        } catch (IOException e) {
-            TeamscaleUploadPluginResult resultingResultOnUploadFailure = resultOnUploadFailure;
-            if (resultingResultOnUploadFailure == null) {
-                // If the job is set to inherit, use global configuration
-                resultingResultOnUploadFailure =
-                        TeamscaleUploadPluginConfiguration.get().getResultOnUploadFailureEnum();
-            }
-            String level = ERROR;
+        TeamscaleUploadPluginResult resultingResultOnUploadFailure = resultOnUploadFailure;
+        if (resultingResultOnUploadFailure == null) {
+            // If the job is set to inherit, use global configuration
+            resultingResultOnUploadFailure =
+                    TeamscaleUploadPluginConfiguration.get().getResultOnUploadFailureEnum();
+        }
+        String logLevel;
+        if (resultingResultOnUploadFailure == TeamscaleUploadPluginResult.IGNORE) {
+            logLevel = INFO;
+        } else {
+            logLevel = ERROR;
+        }
+        if (!uploadReports(listener.getLogger(), logLevel, reports, rev)) {
             switch (resultingResultOnUploadFailure) {
                 case IGNORE:
-                    level = INFO;
                     break;
                 case UNSTABLE:
                     run.setResult(Result.UNSTABLE);
@@ -331,7 +330,6 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                     run.setResult(Result.FAILURE);
                     break;
             }
-            listener.getLogger().println(level + "Failed to upload reports to Teamscale");
         }
     }
 
@@ -357,7 +355,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return envVars.get("SVN_REVISION");
     }
 
-    private void uploadReports(Map<String, String> reports, String revision) throws IOException {
+    private boolean uploadReports(PrintStream logger, String logLevel, Map<String, String> reports, String revision) {
         List<MultipartBody.Part> parts = new ArrayList<>();
         for (Map.Entry<String, String> filenameAndReportContent : reports.entrySet()) {
             parts.add(MultipartBody.Part.createFormData(
@@ -376,7 +374,39 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 getPartition(),
                 getUploadMessage(),
                 parts);
-        apiRequest.execute();
+        try {
+            Request request = apiRequest.request();
+
+            long requestStartTime = System.nanoTime();
+            logger.print(TeamscaleUploadBuilder.INFO + request.method() + " - ");
+            logger.println(request.url());
+
+            Response<ResponseBody> response = apiRequest.execute();
+
+            long requestEndTime = System.nanoTime();
+
+            double requestTimeInMs = (requestEndTime - requestStartTime) / 1e6d;
+
+            if (!response.isSuccessful()) {
+                try (ResponseBody body = response.errorBody()) {
+                    logger.printf(
+                            "%sResponse - %s %s in %.1fms body:%n%s",
+                            logLevel,
+                            response.code(),
+                            response.message(),
+                            requestTimeInMs,
+                            body != null ? body.string() : "Empty");
+                }
+                return false;
+            } else {
+                logger.println(TeamscaleUploadBuilder.INFO
+                        + String.format("Response - %s in %.1fms", response.code(), requestTimeInMs));
+                return true;
+            }
+        } catch (IOException e) {
+            logger.println(logLevel + "Failed to upload reports to Teamscale: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
