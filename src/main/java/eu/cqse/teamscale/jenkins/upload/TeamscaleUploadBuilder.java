@@ -390,7 +390,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             if (!response.isSuccessful()) {
                 try (ResponseBody body = response.errorBody()) {
                     logger.printf(
-                            "%sResponse - %s %s in %.1fms body:%n%s",
+                            "%sResponse - %s %s in %.1fms body:%n%s%n",
                             logLevel,
                             response.code(),
                             response.message(),
