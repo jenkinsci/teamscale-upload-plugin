@@ -114,8 +114,7 @@ class TeamscaleUploadBuilderTest {
             FreeStyleBuild build = jenkins.buildAndAssertStatus(Result.FAILURE, project);
 
             jenkins.assertLogContains(
-                    "TS-ERROR: Failed to upload reports to Teamscale: Failed to connect to localhost",
-                    build);
+                    "TS-ERROR: Failed to upload reports to Teamscale: Failed to connect to localhost", build);
         });
     }
 
