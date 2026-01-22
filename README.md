@@ -46,6 +46,12 @@ Then set Source Code Management to Git and choose the same repository as in Team
 Set URL as http://localhost:8080/, add admin:admin user and configure the remaining settings.
 Click Build Now, then go to the Job and check the Console Output for the expected output. You should also see the report uploaded in Teamscale.
 
+Optionally, "Setup Security" with "Jenkins' own user database".
+Create a lowpriv user.
+Set "Authorization" to "Project-based Matrix Authorization Strategy" and configure appropriately.
+Go to http://localhost:8081/jenkins/pipeline-syntax/ and check that lowpriv user can use it.
+Optionally enable Overall/SystemRead permission according to Jenkins documentation to also test global configuration read access.
+
 ### Publishing
 
 File a [PR](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request) on master

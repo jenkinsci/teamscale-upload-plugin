@@ -1,0 +1,4 @@
+root = true
+
+[pom.xml]
+indent_size = 2

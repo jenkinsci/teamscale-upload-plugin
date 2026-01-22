@@ -27,5 +27,10 @@
     <f:entry title="${%Revision}" field="revision">
                 <f:textbox />
         </f:entry>
-
+    <f:entry field="resultNoReports" title="Result when no reports">
+        <f:select />
+    </f:entry>
+    <f:entry field="resultOnUploadFailure" title="Result on report upload failure">
+        <f:select />
+    </f:entry>
 </j:jelly>
