@@ -6,6 +6,24 @@ uploading external code coverage to teamscale.
 ## Getting started
 See [documentation](https://docs.teamscale.com/reference/jenkins-plugin)  
 
+## Proxy configuration
+
+The plugin uploads the reports from the Jenkins controller. It does not use the proxy configured in Jenkins itself
+(Manage Jenkins → System), but the system properties of the controller's JVM:
+
+* The standard JVM properties, which apply to all of Jenkins:
+  * `https.proxyHost` and `https.proxyPort` for `https://` Teamscale URLs
+  * `http.proxyHost` and `http.proxyPort` for `http://` Teamscale URLs
+  * `http.nonProxyHosts` for the hosts to contact without the proxy, e.g. `-Dhttp.nonProxyHosts="*.mycompany.com|localhost"`.
+    It applies to both schemes.
+* Properties that apply to the Teamscale upload only and take precedence over the standard ones:
+  `teamscale.https.proxyHost`, `teamscale.https.proxyPort`, `teamscale.https.proxyUser`, `teamscale.https.proxyPassword`
+  and `teamscale.https.nonProxyHosts` (falls back to `http.nonProxyHosts`). The HTTPS proxy is used for Teamscale URLs of
+  both schemes; the `teamscale.http.*` counterparts are used if no HTTPS proxy is set.
+
+Proxy credentials can only be configured with the `teamscale.http(s).proxyUser` and `teamscale.http(s).proxyPassword`
+properties. The JVM ignores `http(s).proxyUser` and `http(s).proxyPassword`.
+
 ## For Developers
 
 Fork or clone [https://github.com/jenkinsci/teamscale-upload-plugin](https://github.com/jenkinsci/teamscale-upload-plugin)  

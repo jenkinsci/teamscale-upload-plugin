@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import com.teamscale.client.HttpUtils;
 import com.teamscale.client.ITeamscaleService;
 import com.teamscale.client.TeamscaleServiceGenerator;
 import hudson.EnvVars;
@@ -36,6 +37,7 @@ import javax.servlet.ServletException;
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
+import kotlin.Unit;
 import okhttp3.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -50,6 +52,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 import retrofit2.Call;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 
 /**
  * The Teamscale Jenkins plugin.
@@ -77,6 +80,9 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
      * For printing info to jenkins console.
      */
     public static final String INFO = "TS-INFO: ";
+
+    /** User agent sent to Teamscale. */
+    private static final String USER_AGENT = "teamscale-upload-jenkins-plugin";
 
     private final String url;
     private final String teamscaleProject;
@@ -263,13 +269,8 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             return;
         }
 
-        api = TeamscaleServiceGenerator.createService(
-                ITeamscaleService.class,
-                url,
-                credential.getUsername(),
-                credential.getPassword().getPlainText(),
-                Duration.ofSeconds(60),
-                Duration.ofSeconds(60));
+        api = createService(
+                url, credential.getUsername(), credential.getPassword().getPlainText());
 
         String rev = getScmRevision(env);
         listener.getLogger().println(INFO + "revision: " + rev);
@@ -355,6 +356,33 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
         return envVars.get("SVN_REVISION");
     }
 
+    /**
+     * Creates the Teamscale service. {@code TeamscaleServiceGenerator.createService} is an inline Kotlin function that
+     * cannot be called from Java, so this replicates it on top of {@link HttpUtils#createRetrofit}. That configures the
+     * proxy from the teamscale.http(s).proxy* system properties. Without those, OkHttp uses the JVM's default proxy
+     * selector, which honors the plain http(s).proxyHost/proxyPort and http.nonProxyHosts system properties.
+     */
+    private static ITeamscaleService createService(HttpUrl url, String username, String accessToken) {
+        Retrofit retrofit = HttpUtils.createRetrofit(
+                retrofitBuilder -> {
+                    retrofitBuilder.baseUrl(url);
+                    return Unit.INSTANCE;
+                },
+                okHttpBuilder -> {
+                    okHttpBuilder
+                            // teamscale-client up to version 34 used 60 s, newer versions keep OkHttp's 10 s default
+                            .connectTimeout(Duration.ofSeconds(60))
+                            .addInterceptor(HttpUtils.INSTANCE.getBasicAuthInterceptor(username, accessToken))
+                            .addInterceptor(new TeamscaleServiceGenerator.AcceptJsonInterceptor())
+                            .addNetworkInterceptor(
+                                    new TeamscaleServiceGenerator.CustomUserAgentInterceptor(USER_AGENT));
+                    return Unit.INSTANCE;
+                },
+                Duration.ofSeconds(60),
+                Duration.ofSeconds(60));
+        return retrofit.create(ITeamscaleService.class);
+    }
+
     private boolean uploadReports(PrintStream logger, String logLevel, Map<String, String> reports, String revision) {
         List<MultipartBody.Part> parts = new ArrayList<>();
         for (Map.Entry<String, String> filenameAndReportContent : reports.entrySet()) {
@@ -370,7 +398,6 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
                 null,
                 revision,
                 getRepository(),
-                true,
                 getPartition(),
                 getUploadMessage(),
                 parts);
