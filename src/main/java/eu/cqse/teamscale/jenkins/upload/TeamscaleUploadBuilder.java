@@ -40,7 +40,6 @@ import jenkins.tasks.SimpleBuildStep;
 import kotlin.Unit;
 import okhttp3.*;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.DirectoryScanner;
 import org.jenkinsci.Symbol;
 import org.jspecify.annotations.NonNull;
@@ -536,7 +535,7 @@ public class TeamscaleUploadBuilder extends Notifier implements SimpleBuildStep 
             if (value.startsWith("${") && value.endsWith("}")) {
                 return FormValidation.warning("Cannot validate expression based credentials");
             }
-            if (StringUtils.isBlank(value)) {
+            if (Util.fixEmptyAndTrim(value) == null) {
                 return FormValidation.error("Upload will fail without credentials");
             }
             if (CredentialsProvider.listCredentialsInItem(
